@@ -17,5 +17,5 @@ SHELL ["conda", "run", "-n", "my_env", "/bin/bash", "-c"]
 # Copy the entire project into the container
 COPY . .
 
-# Set the default command (modify for your project)
+# Set the default command (modify for your project)dd
 CMD ["conda", "activate","MTL-pep-prop"]
