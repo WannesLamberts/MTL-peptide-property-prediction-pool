@@ -1,4 +1,3 @@
-BootStrap: docker
 From: continuumio/miniconda3
 
 %post
@@ -17,6 +16,8 @@ From: continuumio/miniconda3
 %files
     # Copy the entire project (including environment.yml) into the container's /app directory
     . /app
+
+WORKDIR /app  # This ensures the working directory is set to /app
 
 %runscript
     # Default command that runs when the container is executed
