@@ -12,10 +12,10 @@ RUN conda env create -f environment.yml && \
     conda clean --all -y
 
 # Set shell to use conda environment
-SHELL ["conda", "run", "-n", "my_env", "/bin/bash", "-c"]
+SHELL ["conda", "run", "-n", "MTL-pep-prop", "/bin/bash", "-c"]
 
 # Copy the entire project into the container
 COPY . .
 
-# Set the default command (modify for your project)dd
-CMD ["conda", "activate","MTL-pep-prop"]
+# Set the default command (this will run in the conda environment)
+CMD ["python", "main.py"]  # Replace with the appropriate command for your project
