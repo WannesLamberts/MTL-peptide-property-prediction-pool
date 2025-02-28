@@ -1,28 +1,23 @@
-# Apptainer definition file
-Bootstrap: docker
+BootStrap: docker
 From: continuumio/miniconda3
 
 %post
     # Set working directory inside the container
-    mkdir /app
+    mkdir -p /app
     cd /app
 
-    # Copy the environment file (Assumes that 'environment.yml' is present in the build context)
-    cp /mnt/host/environment.yml /app/
-
-    # Create the conda environment and clean up
-    conda env create -f /app/environment.yml
+    # Create conda environment and clean up
+    conda env create -f /app/environment.yml && \
     conda clean --all -y
 
 %environment
-    # Set environment variables for the conda environment
-    export PATH=/opt/conda/envs/my_env/bin:$PATH
-    export CONDA_PREFIX=/opt/conda/envs/my_env
-
-%runscript
-    # Set shell to use conda environment
-    exec /opt/conda/envs/my_env/bin/bash -c "$@"
+    # Activate the conda environment when entering the container
+    export PATH="/opt/conda/envs/MTL-pep-prop/bin:$PATH"
 
 %files
-    # Copy the entire project into the container
+    # Copy the entire project (including environment.yml) into the container's /app directory
     . /app
+
+%runscript
+    # Default command that runs when the container is executed
+    exec python /app/main.py  # Replace with the appropriate command for your project
