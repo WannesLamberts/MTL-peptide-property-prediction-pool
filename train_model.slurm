@@ -23,6 +23,6 @@ if [ ! -f "predict.py" ]; then
 fi
 
 # Run the Python script
-python train.py --config "mtl_5foldcv_finetune_own_0" -p own --checkpoint-id 0 -c --data-file egein_data/all_data.csv --train-i sample_1k/train_indices.csv --val-i data/val_indices.csv --test-i sample_1k/test_indices.csv --hpt-config hpt/mtl_hpt_finetune_own.csv --hpt-id 27 --vocab-file data/mtl_5fold_cv/all_data_vocab.p
+python train.py --config "mtl_5foldcv_finetune_own_0" -p own --checkpoint-id 0 -c --data-file data/sample_1k/all_data.csv --train-i data/sample_1k/train_0.csv --val-i data/sample_1k/val_0.csv --test-i data/sample_1k/test_0.csv --hpt-config hpt/mtl_hpt_finetune_own.csv --hpt-id 27 --vocab-file data/ceder/all_data_vocab.p
 
 EOF
