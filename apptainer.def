@@ -1,4 +1,7 @@
+Bootstrap: docker
 From: continuumio/miniconda3
+%files
+    environment.yml /app/environment.yml
 
 %post
     # Set working directory inside the container
@@ -12,12 +15,8 @@ From: continuumio/miniconda3
 %environment
     # Activate the conda environment when entering the container
     export PATH="/opt/conda/envs/MTL-pep-prop/bin:$PATH"
+    cd /app
 
-%files
-    # Copy the entire project (including environment.yml) into the container's /app directory
-    . /app
-
-WORKDIR /app  # This ensures the working directory is set to /app
 
 %runscript
     # Default command that runs when the container is executed
