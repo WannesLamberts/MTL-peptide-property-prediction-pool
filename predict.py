@@ -82,13 +82,12 @@ if __name__ == "__main__":
 
     # Example on how to create predictions with an existing model
     best_run = (
-        "lightning_logs/CONFIG=mtl_5foldcv_finetune_tape_0,TASKS=CCS_iRT,MODE=supervised,PRETRAIN=tape,"
-        "LR=0.0003105497384738,BS=1024,OPTIM=adamw,LOSS=mae,CLIP=False,ACTIVATION=gelu,SCHED=warmup_decay_cos,"
-        "SIZE=768,NUMLAYERS=12/version_0"
+        "lightning_logs/CONFIG=mtl_5foldcv_finetune_own_0,TASKS=CCS_iRT,MODE=supervised,PRETRAIN=own,LR=0.0003262821190296,BS=1024,"
+        "OPTIM=adamw,LOSS=mae,CLIP=True,ACTIVATION=gelu,SCHED=warmup_decay_cos,SIZE=180,NUMLAYERS=9/version_0"
     )
 
     predict_run(
         best_run,
-        "data/mtl_5fold_cv/all_data.csv",
-        "data/mtl_5fold_cv/test_0.csv",
+        "data/ceder/all_data.csv",
+        "data/ceder/test_0.csv",
     )
