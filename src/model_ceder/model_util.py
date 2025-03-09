@@ -65,7 +65,7 @@ class EarlyStoppingLate(EarlyStopping):
 
 
 def create_model(args):
-    from src.lit_model import LitMTL
+    from src.model_ceder.lit_model import LitMTL
 
     bert_config = ProteinBertConfig.from_pretrained(
         "bert-base",

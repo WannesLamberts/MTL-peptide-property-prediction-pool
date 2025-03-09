@@ -2,29 +2,25 @@ import os
 import pickle
 from argparse import Namespace
 
-import pandas as pd
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import TensorBoardLogger
 from tape.models.modeling_bert import ProteinBertConfig
 from torch.utils.data import DataLoader
 
 from src.dataset import MTLPepDataset, custom_collate
-from src.model_ceder.lit_model import LitMTL
-from src.read_data import apply_index_file
+from src.model_pool.lit_model import LitMTL
+
 from src.util import (
     DEFAULT_CONFIG,
     check_checkpoint_path,
     split_run_config,
 )
 
-
-def predict(run, args, run_config):
+def get_encoding(run, args, run_config):
     args.vocab = pickle.load(open(args.vocab_file, "rb"))
     args.scalers = pickle.load(open(args.scalers_file, "rb"))
 
-    all_data_df = pd.read_csv(args.all_data_file, index_col=0)
-    args.df_test = apply_index_file(all_data_df, args.predict_i)
-
+    args.df_test = args.all_data
 
     predict_ds = MTLPepDataset(args.df_test, args)
     predict_dl = DataLoader(
@@ -33,7 +29,6 @@ def predict(run, args, run_config):
         collate_fn=custom_collate,
         num_workers=1,
     )
-
     bert_config = ProteinBertConfig.from_pretrained(
         "bert-base",
         vocab_size=len(args.vocab),
@@ -61,34 +56,18 @@ def predict(run, args, run_config):
         ),
         precision="16-mixed",
     )
-    trainer.test(lit_model, dataloaders=predict_dl)
+    predictions = trainer.predict(lit_model, dataloaders=predict_dl)
+    return predictions
 
-
-def predict_run(run, all_data_file, predict_i):
+def get_encoding_run(run,all_data):
     data_config = {
-        "all_data_file": all_data_file,
-        "predict_i": predict_i,
+        "all_data": all_data,
         "vocab_file": os.path.join(run, "vocab.p"),
         "scalers_file": os.path.join(run, "scalers.p"),
     }
-
     run_config = split_run_config(run)
     config_dict = DEFAULT_CONFIG | data_config
     args = Namespace(**config_dict)
     args.predict_file_name = "predict"
-    predict(run, args, run_config)
+    return get_encoding(run, args, run_config)
 
-
-if __name__ == "__main__":
-
-    # Example on how to create predictions with an existing model
-    best_run = (
-        "lightning_logs/CONFIG=mtl_5foldcv_finetune_own_0,TASKS=CCS_iRT,MODE=supervised,PRETRAIN=own,LR=0.0003262821190296,BS=1024,"
-        "OPTIM=adamw,LOSS=mae,CLIP=True,ACTIVATION=gelu,SCHED=warmup_decay_cos,SIZE=180,NUMLAYERS=9/version_0"
-    )
-
-    predict_run(
-        best_run,
-        "data/sample_1k/all_data.csv",
-        "data/sample_1k/test_0.csv",
-    )

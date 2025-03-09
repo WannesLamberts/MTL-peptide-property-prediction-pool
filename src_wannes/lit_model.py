@@ -9,7 +9,7 @@ import torch
 from tape.utils import setup_optimizer
 from torch import nn
 
-from src.model import MTLTransformerEncoder
+from src.model_ceder.model import MTLTransformerEncoder
 from src.util import SequentialLR
 
 

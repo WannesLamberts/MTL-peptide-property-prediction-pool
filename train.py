@@ -10,7 +10,7 @@ from sklearn.preprocessing import StandardScaler
 from torch.utils.data import DataLoader
 
 from src.dataset import MTLPepDataset, custom_collate
-from src.model_util import EarlyStoppingLate, create_model
+from src.model_ceder.model_util import EarlyStoppingLate, create_model
 from src.read_data import read_train_val_test_data
 from src.util import (
     check_checkpoint_path,

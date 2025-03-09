@@ -5,7 +5,7 @@ from tape.models.modeling_bert import (
 from tape.models.modeling_utils import MLMHead
 from torch import nn
 
-from src.model_util import CCSValuePredictionHead, ValuePredictionHead
+from src.model_ceder.model_util import CCSValuePredictionHead, ValuePredictionHead
 
 
 class MTLTransformerEncoder(ProteinBertAbstractModel):
