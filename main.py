@@ -16,6 +16,7 @@ def create_model_dataset(df):
     df['Charge'] = ''  # Empty values
     df['DCCS_sequence'] = ''  # Empty values
     return df
+import json
 
 def convert(group):
     name = group['filename'].iloc[0]
@@ -28,13 +29,13 @@ def convert(group):
     pred = get_encoding_run(best_run, df)
     pred = torch.cat(pred, dim=0)  # Assuming batch dimension is 0
     column_averages = pred.mean(dim=0)
-    print(column_averages.shape)
-    return 5
+    return column_averages
 
 if __name__ == "__main__":
-    filename = "og_data/test_data_calibrated_merged_1000.tsv"
+    filename = "og_data/test_data_calibrated_merged.tsv"
     #filename = "data/sample_1k/all_data.csv"
 
     df = pd.read_csv(filename, sep="\t")
-    df["test"] = df.groupby('filename').apply(convert)
-    #print(df)
+    lookup_dic = df.groupby('filename').apply(convert).to_dict()
+    with open("test.pkl", 'wb') as pickle_file:
+        pickle.dump(lookup_dic, pickle_file)
