@@ -9,7 +9,7 @@ import torch
 from tape.utils import setup_optimizer
 from torch import nn
 
-from src.model_ceder.model import MTLTransformerEncoder
+from src.model_left.model import MTLTransformerEncoder
 from src.util import SequentialLR
 
 
@@ -128,7 +128,8 @@ class LitMTL(pl.LightningModule):
                     task=t,
                 )
             else:
-                (t_out,) = self.model(batch["token_ids"][t_select], task=t)
+
+                (t_out,) = self.model(batch["token_ids"][t_select], task=t,features=batch["features"][t_select])
 
             if len(t_out) > 0:
                 # t_out will be optimized to be equal to the standardized label, inverse transform to get original label

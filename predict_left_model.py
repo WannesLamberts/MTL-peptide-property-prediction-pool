@@ -8,8 +8,8 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from tape.models.modeling_bert import ProteinBertConfig
 from torch.utils.data import DataLoader
 
-from src.dataset import MTLPepDataset, custom_collate
-from src.model_ceder.lit_model import LitMTL
+from src.model_left.dataset import MTLPepDataset, custom_collate
+from src.model_left.lit_model import LitMTL
 from src.read_data import apply_index_file
 from src.util import (
     DEFAULT_CONFIG,
@@ -23,9 +23,13 @@ def predict(run, args, run_config):
     args.scalers = pickle.load(open(args.scalers_file, "rb"))
 
     all_data_df = pd.read_csv(args.all_data_file, index_col=0)
+    #args.df_test = all_data_df
     args.df_test = apply_index_file(all_data_df, args.predict_i)
 
-
+    lookup_df = pd.read_parquet('test.parquet', engine='pyarrow')
+    args.df_test = pd.merge(args.df_test, lookup_df, on='filename',
+                         how='inner')  # You can adjust 'how' to 'left', 'right', or 'outer' based on your need
+    print(args.df_test)
     predict_ds = MTLPepDataset(args.df_test, args)
     predict_dl = DataLoader(
         predict_ds,
@@ -77,6 +81,20 @@ def predict_run(run, all_data_file, predict_i):
     args = Namespace(**config_dict)
     args.predict_file_name = "predict"
     predict(run, args, run_config)
+
+def create_model_dataset(df):
+
+    # Select relevant columns
+    df = df[['sequence', 'iRT','filename']]
+
+    # Rename columns correctly
+    df.columns = ['modified_sequence', 'label','filename']
+
+    # Add missing columns
+    df['task'] = 'iRT'
+    df['Charge'] = ''  # Empty values
+    df['DCCS_sequence'] = ''  # Empty values
+    return df
 
 
 if __name__ == "__main__":
