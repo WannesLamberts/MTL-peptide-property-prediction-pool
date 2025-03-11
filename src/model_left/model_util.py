@@ -25,7 +25,7 @@ class ValuePredictionHeadFix(ValuePredictionHead):
     def __init__(self, config):
         super().__init__(config.hidden_size, config.hidden_dropout_prob)
         self.value_prediction = SimpleMLPFix(
-            config.hidden_size,
+            config.hidden_size*2,
             int(config.hidden_size * 2 / 3),
             1,
             config.hidden_dropout_prob,
@@ -78,13 +78,13 @@ def create_model(args):
 
     if args.mode == "supervised":
         if args.pretrained_model == "own":
+
             model = LitMTL.load_from_checkpoint(
                 args.checkpoint_path,
                 strict=False,
                 mtl_config=args,
                 bert_config=bert_config,
             )
-
         elif args.pretrained_model == "none":
             model = LitMTL(args, bert_config)
 

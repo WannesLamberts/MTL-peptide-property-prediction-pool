@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 
 from src.model_left.dataset import MTLPepDataset, custom_collate
 from src.model_left.model_util import EarlyStoppingLate, create_model
-from src.read_data import read_train_val_test_data
+from src.read_data_left import read_train_val_test_data
 from src.util import (
     check_checkpoint_path,
     split_run_config,
@@ -63,7 +63,8 @@ def train(args):
     print(f"Logging to {logger.log_dir}")
 
     print("Reading train and validation data")
-    args.df_train, args.df_val, args.df_test = read_train_val_test_data(args)
+    lookup_df = pd.read_parquet('test.parquet', engine='pyarrow')
+    args.df_train, args.df_val, args.df_test = read_train_val_test_data(args,lookup_df)
 
     print("Creating or loading the vocab")
     args.vocab = get_vocab(args)
@@ -93,7 +94,7 @@ def train(args):
     lit_model = create_model(args)
 
     trainer = pl.Trainer(
-        max_epochs=-1,
+        max_epochs=10,
         min_epochs=15,
         accelerator="gpu",
         devices=args.gpus,

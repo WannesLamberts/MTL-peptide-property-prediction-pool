@@ -4,7 +4,6 @@ from sklearn.model_selection import train_test_split
 
 def create_model_dataset(file,output):
     df = pd.read_csv(file, sep='\t', index_col=False)
-
     # Select relevant columns
     df = df[['sequence', 'iRT','filename']]
 
@@ -44,7 +43,31 @@ def split_data(file, train_ratio, val_ratio, test_ratio,output_dir):
     pd.DataFrame(test_indices, columns=['Index']).to_csv(output_dir+"test_0.csv", index=False, header=False)
 
     return train_indices, val_indices, test_indices
-filename = "og_data/test_data_calibrated_merged_1000.tsv"
-create_model_dataset(filename,"data/sample_1k_filename/all_data.csv")
+filename = "og_data/test_data_10_filenames.tsv"
+create_model_dataset(filename,"data/sample_10_filenames/all_data.csv")
 
-split_data('data/sample_1k_filename/all_data.csv',0.8,0.1,0.1,'data/sample_1k_filename/')
+split_data('data/sample_10_filenames/all_data.csv',0.8,0.1,0.1,'data/sample_10_filenames/')
+
+
+
+
+
+
+
+
+
+
+
+
+
+# df = pd.read_csv("og_data/test_data_calibrated_merged.tsv", delimiter="\t")
+#
+# # Select 10 random filenames from the 'filename' column
+# selected_filenames = df['filename'].sample(n=10, random_state=42).tolist()
+#
+# # Create a new DataFrame with only rows where 'filename' is in the selected filenames
+# filtered_df = df[df['filename'].isin(selected_filenames)]
+#
+# # Display the filtered DataFrame
+# print(filtered_df)
+# filtered_df.to_csv("og_data/test_data_10_filenames.tsv", sep="\t", index=False)

@@ -36,6 +36,7 @@ class MTLTransformerEncoder(ProteinBertAbstractModel):
                     self.task_heads[t] = CCSValuePredictionHead(bert_config)
                 else:
                     self.task_heads[t] = ValuePredictionHead(bert_config)
+                    pass
         elif self.mode == "pretrain":
             self.mlm_head = MLMHead(
                 bert_config.hidden_size,
@@ -75,9 +76,8 @@ class MTLTransformerEncoder(ProteinBertAbstractModel):
             if task == "CCS":
                 out = self.task_heads[task](pooled_output, charge)
             else:
-                result = torch.cat((pooled_output, features), dim=1)
-
-                (out,) = self.task_heads[task](pooled_output)
+                result = torch.cat((pooled_output, features), dim=1).to(torch.float16)
+                (out,) = self.task_heads[task](result)
         elif self.mode == "pretrain":
             # add hidden states and attention if they are here
             out = self.mlm_head(sequence_output)[0]
