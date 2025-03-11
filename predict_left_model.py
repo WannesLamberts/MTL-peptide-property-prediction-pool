@@ -27,9 +27,9 @@ def predict(run, args, run_config):
     args.df_test = apply_index_file(all_data_df, args.predict_i)
 
     lookup_df = pd.read_parquet('test.parquet', engine='pyarrow')
-    args.df_test = pd.merge(args.df_test, lookup_df, on='filename',
-                         how='inner')  # You can adjust 'how' to 'left', 'right', or 'outer' based on your need
-    print(args.df_test)
+    original_index = args.df_test.index
+    args.df_test = args.df_test.merge(lookup_df, on='filename', how='left')
+    args.df_test.index = original_index  # Restore original index
     predict_ds = MTLPepDataset(args.df_test, args)
     predict_dl = DataLoader(
         predict_ds,
@@ -101,12 +101,11 @@ if __name__ == "__main__":
 
     # Example on how to create predictions with an existing model
     best_run = (
-        "lightning_logs/CONFIG=mtl_5foldcv_finetune_own_0,TASKS=CCS_iRT,MODE=supervised,PRETRAIN=own,LR=0.0003262821190296,BS=1024,"
-        "OPTIM=adamw,LOSS=mae,CLIP=True,ACTIVATION=gelu,SCHED=warmup_decay_cos,SIZE=180,NUMLAYERS=9/version_0"
+        "lightning_logs/CONFIG=mtl_5foldcv_finetune_own_0,TASKS=CCS_iRT,MODE=supervised,PRETRAIN=own,LR=0.0003262821190296,BS=1024,OPTIM=adamw,LOSS=mae,CLIP=True,ACTIVATION=gelu,SCHED=warmup_decay_cos,SIZE=180,NUMLAYERS=9/version_1"
     )
 
     predict_run(
         best_run,
-        "data/sample_1k_filename/all_data.csv",
-        "data/sample_1k_filename/test_0.csv",
+        "data/sample_10_filenames/all_data.csv",
+        "data/sample_10_filenames/test_0.csv",
     )
