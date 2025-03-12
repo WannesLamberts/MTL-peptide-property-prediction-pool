@@ -164,7 +164,7 @@ def parse_args():
         "--tasks",
         type=str,
         nargs="+",
-        default=["CCS", "iRT"],
+        default=["iRT"],
         choices=["iRT", "CCS"],
         help="Tasks for the multitask model, currently only 'iRT' and 'CCS' are supported. Default: "
         "CCS and iRT",
