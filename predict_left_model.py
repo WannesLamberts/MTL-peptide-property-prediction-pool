@@ -8,8 +8,8 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from tape.models.modeling_bert import ProteinBertConfig
 from torch.utils.data import DataLoader
 
-from src.model_left.dataset import MTLPepDataset, custom_collate
-from src.model_left.lit_model import LitMTL
+from src.dataset import MTLPepDataset, custom_collate
+from src.lit_model import LitMTL
 from src.read_data import apply_index_file
 from src.util import (
     DEFAULT_CONFIG,
@@ -101,7 +101,7 @@ if __name__ == "__main__":
 
     # Example on how to create predictions with an existing model
     best_run = (
-        "lightning_logs/CONFIG=mtl_5foldcv_finetune_own_0,TASKS=CCS_iRT,MODE=supervised,PRETRAIN=own,LR=0.0003262821190296,BS=1024,OPTIM=adamw,LOSS=mae,CLIP=True,ACTIVATION=gelu,SCHED=warmup_decay_cos,SIZE=180,NUMLAYERS=9/version_1"
+        "lightning_logs/CONFIG=mtl_5foldcv_finetune_own_0,TASKS=CCS_iRT,MODE=supervised,PRETRAIN=own,LR=0.0003262821190296,BS=1024,OPTIM=adamw,LOSS=mae,CLIP=True,ACTIVATION=gelu,SCHED=warmup_decay_cos,SIZE=180,NUMLAYERS=9/version_8"
     )
 
     predict_run(

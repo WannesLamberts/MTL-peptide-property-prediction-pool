@@ -9,9 +9,9 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import DataLoader
 
-from src.model_left.dataset import MTLPepDataset, custom_collate
-from src.model_left.model_util import EarlyStoppingLate, create_model
-from src.read_data_left import read_train_val_test_data
+from src.dataset import MTLPepDataset, custom_collate
+from src.model_util import EarlyStoppingLate, create_model
+from src.read_data import read_train_val_test_data
 from src.util import (
     check_checkpoint_path,
     split_run_config,
@@ -94,7 +94,7 @@ def train(args):
     lit_model = create_model(args)
 
     trainer = pl.Trainer(
-        max_epochs=10,
+        max_epochs=1,
         min_epochs=15,
         accelerator="gpu",
         devices=args.gpus,

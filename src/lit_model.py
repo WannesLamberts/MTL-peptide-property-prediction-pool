@@ -9,7 +9,7 @@ import torch
 from tape.utils import setup_optimizer
 from torch import nn
 
-from src.model_left.model import MTLTransformerEncoder
+from src.model import MTLTransformerEncoder
 from src.util import SequentialLR
 
 
@@ -49,6 +49,15 @@ class LitMTL(pl.LightningModule):
             batch_size=len(batch),
         )
         return loss
+
+
+
+    def predict_step(self, batch, batch_idx):
+        t = 'iRT'
+        (t_out,) = self.model(batch["token_ids"], task=t)
+        return t_out
+
+
 
     def validation_step(self, batch, batch_idx):
         loss = self.step(batch, batch_idx, "val_predictions")

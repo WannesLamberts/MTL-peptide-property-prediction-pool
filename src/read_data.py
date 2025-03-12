@@ -10,7 +10,7 @@ def filter_on_tasks(df, tasks):
     return df[df["task"].isin(tasks)]
 
 
-def read_train_val_test_data(args):
+def read_train_val_test_data(args,lookup_df):
     """
     Read train val and/or test data. Reads all data dataframes for which the arguments were given, otherwise None
     :param args:
@@ -18,7 +18,10 @@ def read_train_val_test_data(args):
     """
     if args.use_1_data_file:
         all_data = pd.read_csv(args.data_file, index_col=0)
-
+        original_index = all_data.index
+        all_data = pd.merge(all_data, lookup_df, on='filename',
+                               how='left')  # You can adjust 'how' to 'left', 'right', or 'outer' based on your need
+        all_data.index = original_index
         df_train = (
             filter_on_tasks(
                 (apply_index_file(all_data, args.train_i)),

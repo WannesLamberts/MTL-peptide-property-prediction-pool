@@ -4,8 +4,8 @@ from tape.models.modeling_bert import (
 )
 from tape.models.modeling_utils import MLMHead
 from torch import nn
-
-from src.model_ceder.model_util import CCSValuePredictionHead, ValuePredictionHead
+import torch
+from src.model_util import CCSValuePredictionHead, ValuePredictionHead
 
 
 class MTLTransformerEncoder(ProteinBertAbstractModel):
@@ -43,6 +43,8 @@ class MTLTransformerEncoder(ProteinBertAbstractModel):
                 bert_config.hidden_act,
                 ignore_index=0,
             )
+        elif self.mode =="pool":
+            pass
         else:
             raise RuntimeError(f"Unrecognized mode {mode}")
 
@@ -58,7 +60,8 @@ class MTLTransformerEncoder(ProteinBertAbstractModel):
                 self.mlm_head.decoder, self.bert.embeddings.word_embeddings
             )
 
-    def forward(self, input_ids, charge=None, task=None, input_mask=None):
+    def forward(self, input_ids, charge=None, task=None, input_mask=None,features = None):
+
         if self.mode == "supervised":
             if task is None:
                 raise RuntimeError("Please specify your prediction task")
@@ -69,14 +72,18 @@ class MTLTransformerEncoder(ProteinBertAbstractModel):
         outputs = self.bert(input_ids, input_mask=input_mask)
         sequence_output, pooled_output = outputs[:2]
 
+
         if self.mode == "supervised":
             if task == "CCS":
                 out = self.task_heads[task](pooled_output, charge)
             else:
-                (out,) = self.task_heads[task](pooled_output)
+                result = torch.cat((pooled_output, features), dim=1).to(torch.float16)
+                (out,) = self.task_heads[task](result)
         elif self.mode == "pretrain":
             # add hidden states and attention if they are here
             out = self.mlm_head(sequence_output)[0]
+        elif self.mode == "pool":
+            out = pooled_output
 
         # (loss), prediction_scores, (hidden_states), (attentions)
         return (out,) + outputs[2:]

@@ -34,10 +34,38 @@ class MTLPepDataset(Dataset):
     def __getitem__(self, item):
         if self.args.mode == "supervised":
             return self._getitem_supervised(item)
+        elif self.args.mode == "pool":
+            return self._getitem_pool(item)
         else:
             return self._getitem_pretrain(item)
 
     def _getitem_supervised(self, item):
+        peptide = self.df[self.pep_col].iloc[item]
+        ids = self.args.vocab.convert_tokens_to_ids(
+            peptide[: self.args.seq_len]
+        )
+        ids = end_padding(ids, self.args.seq_len, self.args.vocab.pad_i)
+        task = self.df["task"].iloc[item]
+        if task == "CCS":
+            charge = self.df["Charge"].iloc[item]
+            charge = min(int(charge), 4)
+            one_hot = [0.0 for _ in range(4)]
+            one_hot[charge - 1] = 1.0
+        else:
+            one_hot = [0.0 for _ in range(4)]
+        label = self.df["label"].iloc[item]
+        standardized_label = self.args.scalers[task].transform([[label]])
+
+        return {
+            "token_ids": torch.tensor(ids),
+            "standardized_label": torch.tensor(standardized_label[0][0]),
+            "task": task,
+            "charge": torch.tensor(one_hot),
+            "indx": self.df.index[item],
+            "features": self.df.features.iloc[item],
+        }
+
+    def _getitem_pool(self, item):
         peptide = self.df[self.pep_col].iloc[item]
         ids = self.args.vocab.convert_tokens_to_ids(
             peptide[: self.args.seq_len]

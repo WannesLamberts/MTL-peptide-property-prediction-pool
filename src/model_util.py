@@ -25,7 +25,7 @@ class ValuePredictionHeadFix(ValuePredictionHead):
     def __init__(self, config):
         super().__init__(config.hidden_size, config.hidden_dropout_prob)
         self.value_prediction = SimpleMLPFix(
-            config.hidden_size*2,
+            config.hidden_size *2,
             int(config.hidden_size * 2 / 3),
             1,
             config.hidden_dropout_prob,
@@ -65,7 +65,7 @@ class EarlyStoppingLate(EarlyStopping):
 
 
 def create_model(args):
-    from src.model_left.lit_model import LitMTL
+    from src.lit_model import LitMTL
 
     bert_config = ProteinBertConfig.from_pretrained(
         "bert-base",

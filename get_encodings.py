@@ -8,7 +8,7 @@ from tape.models.modeling_bert import ProteinBertConfig
 from torch.utils.data import DataLoader
 
 from src.dataset import MTLPepDataset, custom_collate
-from src.model_pool.lit_model import LitMTL
+from src.lit_model import LitMTL
 
 from src.util import (
     DEFAULT_CONFIG,
@@ -42,6 +42,7 @@ def get_encoding(run, args, run_config):
         check_checkpoint_path(os.path.join(run, "checkpoints")),
         mtl_config=args,
         bert_config=bert_config,
+        strict = False
     )
 
     name, version = run.split("/")[-2:]
@@ -69,6 +70,7 @@ def get_encoding_run(run,all_data):
     config_dict = DEFAULT_CONFIG | data_config
     args = Namespace(**config_dict)
     args.predict_file_name = "predict"
+    args.mode = "pool"
     return get_encoding(run, args, run_config)
 
 
