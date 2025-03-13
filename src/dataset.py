@@ -12,9 +12,7 @@ class MTLPepDataset(Dataset):
         self.df = df.sample(frac=1)
         self.args = args
         self.pep_col = "modified_sequence"
-        self.mask_prob = (
-            0.15  # hardcoded for now, could be added as an argument
-        )
+
         self._replace_mods()
 
     def _replace_mods(self):
@@ -36,8 +34,7 @@ class MTLPepDataset(Dataset):
             return self._getitem_supervised(item)
         elif self.args.mode == "pool":
             return self._getitem_pool(item)
-        else:
-            return self._getitem_pretrain(item)
+
 
     def _getitem_supervised(self, item):
         peptide = self.df[self.pep_col].iloc[item]
@@ -68,39 +65,6 @@ class MTLPepDataset(Dataset):
             "standardized_label": torch.tensor(standardized_label[0][0]),
             "indx": self.df.index[item],
         }
-    def _mask_token_seq(self, token_seq):
-        masked_seq = []
-        output_label = []
-
-        for token in token_seq:
-            prob = random.random()
-            if prob < self.mask_prob:
-                prob /= self.mask_prob
-
-                # 80% randomly change token to mask token
-                if prob < 0.8:
-                    masked_seq.append(
-                        self.args.vocab.convert_token_to_id(
-                            self.args.vocab.mask_token
-                        )
-                    )
-
-                # 10% randomly change token to random token
-                elif prob < 0.9:
-                    masked_seq.append(random.randrange(len(self.args.vocab)))
-
-                # 10% randomly change token to current token
-                else:
-                    masked_seq.append(
-                        self.args.vocab.convert_token_to_id(token)
-                    )
-                output_label.append(self.args.vocab.convert_token_to_id(token))
-            else:
-                masked_seq.append(self.args.vocab.convert_token_to_id(token))
-                output_label.append(0)
-
-        return masked_seq, output_label
-
 
 def custom_collate(data):
     # Use the default collate function for everything except the task, this becomes a list of strings
