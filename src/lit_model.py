@@ -106,8 +106,7 @@ class LitMTL(pl.LightningModule):
         return loss
 
     def supervised_step(self, batch, batch_idx, save_arg):
-        t_select = [batch_t == 'iRT' for batch_t in batch["task"]]
-        (t_out,) = self.model(batch["token_ids"][t_select], features=batch["features"][t_select])
+        (t_out,) = self.model(batch["token_ids"], features=batch["features"])
 
         if len(t_out) > 0:
             # t_out will be optimized to be equal to the standardized label, inverse transform to get original label
@@ -123,13 +122,13 @@ class LitMTL(pl.LightningModule):
             idxs, preds, losss = getattr(self, save_arg)
             to_save = (
                 idxs
-                + [e for i, e in enumerate(batch["indx"]) if t_select[i]],
+                + [e for i, e in enumerate(batch["indx"])],
                 preds + list(predictions),
                 losss,
             )
             setattr(self, save_arg, to_save)
         loss = self.supervised_loss(
-            batch["standardized_label"][t_select], t_out
+            batch["standardized_label"], t_out
         )
 
         if torch.isnan(loss) or torch.isinf(loss):

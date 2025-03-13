@@ -30,20 +30,17 @@ class MTLTransformerEncoder(ProteinBertAbstractModel):
         self.bert = ProteinBertModel(bert_config)
 
         if self.mode == "supervised":
-            self.task_heads = nn.ModuleDict()
-            self.task_heads['iRT'] = ValuePredictionHead(bert_config)
-        elif self.mode == "pool":
+            self.task_head = ValuePredictionHead(bert_config)
             pass
-        else:
+        elif self.mode != "pool":
             raise RuntimeError(f"Unrecognized mode {mode}")
         self.init_weights()
     def forward(self, input_ids, features = None):
         outputs = self.bert(input_ids)
         sequence_output, pooled_output = outputs[:2]
-
         if self.mode == "supervised":
             result = torch.cat((pooled_output, features), dim=1).to(torch.float16)
-            (out,) = self.task_heads['iRT'](result)
+            (out,) = self.task_head(result)
         elif self.mode == "pool":
             out = pooled_output
         # (loss), prediction_scores, (hidden_states), (attentions)
