@@ -19,7 +19,7 @@ class LitMTL(pl.LightningModule):
         self.mtl_config = mtl_config
 
         self.model = MTLTransformerEncoder(
-            bert_config, mtl_config.mode, mtl_config.tasks
+            bert_config, mtl_config.mode
         )
 
         self.val_predictions, self.test_predictions = (None for _ in range(2))
@@ -40,7 +40,7 @@ class LitMTL(pl.LightningModule):
             self.test_predictions = ([], [], [])
 
     def training_step(self, batch, batch_idx):
-        loss = self.step(batch, batch_idx, None)
+        loss = self.supervised_step(batch, batch_idx, None)
         self.log(
             f"train_loss",
             loss,
@@ -50,17 +50,12 @@ class LitMTL(pl.LightningModule):
         )
         return loss
 
-
-
     def predict_step(self, batch, batch_idx):
-        t = 'iRT'
-        (t_out,) = self.model(batch["token_ids"], task=t)
+        (t_out,) = self.model(batch["token_ids"])
         return t_out
 
-
-
     def validation_step(self, batch, batch_idx):
-        loss = self.step(batch, batch_idx, "val_predictions")
+        loss = self.supervised_step(batch, batch_idx, "val_predictions")
         self.log(
             f"val_loss",
             loss,
@@ -71,7 +66,7 @@ class LitMTL(pl.LightningModule):
         return loss
 
     def test_step(self, batch, batch_idx):
-        loss = self.step(batch, batch_idx, "test_predictions")
+        loss = self.supervised_step(batch, batch_idx, "test_predictions")
         self.log(
             f"test_loss",
             loss,
@@ -91,12 +86,12 @@ class LitMTL(pl.LightningModule):
     def pretrain_loss_metrics(labels, out):
         return nn.CrossEntropyLoss(ignore_index=0)(out.transpose(1, 2), labels)
 
-    def supervised_loss(self, labels, out, t):
+    def supervised_loss(self, labels, out):
         out = out.squeeze(1)
         targets = labels.float()
         if len(targets) == 0 or len(out) == 0:
             warnings.warn(
-                f"No samples of task {t} in this batch, consider increasing the batch size"
+                f"No samples in this batch, consider increasing the batch size"
             )
             return torch.tensor(0.0)
 
@@ -110,78 +105,45 @@ class LitMTL(pl.LightningModule):
             )
         return loss
 
-    def step(self, batch, batch_idx, save_arg):
-        if self.mtl_config.mode == "supervised":
-            return self.supervised_step(batch, batch_idx, save_arg)
-        elif self.mtl_config.mode == "pretrain":
-            return self.pretraining_step(batch, batch_idx)
+    def supervised_step(self, batch, batch_idx, save_arg):
+        t_select = [batch_t == 'iRT' for batch_t in batch["task"]]
+        (t_out,) = self.model(batch["token_ids"][t_select], features=batch["features"][t_select])
 
-    def pretraining_step(self, batch, batch_idx):
-        (out,) = self.model(batch["masked_token_ids"])
-        loss = self.pretrain_loss_metrics(batch["label"], out)
+        if len(t_out) > 0:
+            # t_out will be optimized to be equal to the standardized label, inverse transform to get original label
+            predictions = (
+                self.mtl_config.scalers['iRT']
+                .inverse_transform(t_out.cpu().detach())
+                .squeeze(1)
+            )
+        else:
+            predictions = []
+        if save_arg is not None:
+            # Save index, prediction (and at the end, loss)
+            idxs, preds, losss = getattr(self, save_arg)
+            to_save = (
+                idxs
+                + [e for i, e in enumerate(batch["indx"]) if t_select[i]],
+                preds + list(predictions),
+                losss,
+            )
+            setattr(self, save_arg, to_save)
+        loss = self.supervised_loss(
+            batch["standardized_label"][t_select], t_out
+        )
 
         if torch.isnan(loss) or torch.isinf(loss):
             warnings.warn(
                 f"Loss became NaN or Inf in epoch {self.current_epoch} batch {batch_idx}"
             )
-        return loss
-
-    def supervised_step(self, batch, batch_idx, save_arg):
-        t_losses = {}
-        for t in self.mtl_config.tasks:
-            t_select = [batch_t == t for batch_t in batch["task"]]
-            if t == "CCS":
-                (t_out,) = self.model(
-                    batch["token_ids"][t_select],
-                    batch["charge"][t_select],
-                    task=t,
-                )
-            else:
-
-                (t_out,) = self.model(batch["token_ids"][t_select], task=t,features=batch["features"][t_select])
-
-            if len(t_out) > 0:
-                # t_out will be optimized to be equal to the standardized label, inverse transform to get original label
-                predictions = (
-                    self.mtl_config.scalers[t]
-                    .inverse_transform(t_out.cpu().detach())
-                    .squeeze(1)
-                )
-            else:
-                predictions = []
-
-            if save_arg is not None:
-                # Save index, prediction (and at the end, loss)
-                idxs, preds, losss = getattr(self, save_arg)
-                to_save = (
-                    idxs
-                    + [e for i, e in enumerate(batch["indx"]) if t_select[i]],
-                    preds + list(predictions),
-                    losss,
-                )
-                setattr(self, save_arg, to_save)
-
-            loss = self.supervised_loss(
-                batch["standardized_label"][t_select], t_out, t
-            )
-
-            if torch.isnan(loss) or torch.isinf(loss):
-                warnings.warn(
-                    f"Loss became NaN or Inf in epoch {self.current_epoch} batch {batch_idx}"
-                )
-
-            t_losses[t] = (loss, sum(t_select))
-
-        tot_values = sum(l[1] for l in t_losses.values())
-        mtl_loss = sum(l * s / tot_values for l, s in t_losses.values())
 
         if save_arg is not None:
             # Add the loss to the val/test predictions, this will be used to only save the best epoch
             idxs, preds, losss = getattr(self, save_arg)
-            to_save = (idxs, preds, losss + [mtl_loss.cpu().item()])
+            to_save = (idxs, preds, losss + [loss.cpu().item()])
             setattr(self, save_arg, to_save)
 
-        return mtl_loss
+        return loss
 
     def configure_optimizers(self):
         if self.mtl_config.optim == "SGD":

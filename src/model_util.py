@@ -35,23 +35,6 @@ class ValuePredictionHeadFix(ValuePredictionHead):
 ValuePredictionHead = ValuePredictionHeadFix
 
 
-class CCSValuePredictionHead(nn.Module):
-    def __init__(self, config):
-        super().__init__()
-        self.value_prediction = SimpleMLPFix(
-            config.hidden_size + 4,
-            int(config.hidden_size * 2 / 3),
-            1,
-            config.hidden_dropout_prob,
-        )
-
-    def forward(self, pooled_output, charge):
-        value_pred = self.value_prediction(
-            torch.cat([pooled_output, charge], dim=1)
-        )
-
-        return value_pred
-
 
 class EarlyStoppingLate(EarlyStopping):
     def _should_skip_check(self, trainer: "pl.Trainer") -> bool:
@@ -78,35 +61,12 @@ def create_model(args):
 
     if args.mode == "supervised":
         if args.pretrained_model == "own":
-
             model = LitMTL.load_from_checkpoint(
                 args.checkpoint_path,
                 strict=False,
                 mtl_config=args,
                 bert_config=bert_config,
             )
-        elif args.pretrained_model == "none":
-            model = LitMTL(args, bert_config)
-
-        elif args.pretrained_model == "tape":
-            # Use the default config when loading the pretrained model
-            bert_config = ProteinBertConfig.from_pretrained("bert-base")
-            model = LitMTL(args, bert_config)
-
-            # Set the pretrained TAPE weights with the default config
-            model.model.bert = ProteinBertModel.from_pretrained("bert-base")
-
-            # The built-in TAPE ProteinModel resize_token_embeddings function does not work, this is an adapted version
-            resize_token_embeddings(model.model, len(args.vocab))
-
-        else:
-            raise ValueError(
-                f"Using pretrained model '{args.pretrained_model}' not supported"
-            )
-
-    elif args.mode == "pretrain":
-        model = LitMTL(args, bert_config)
-
     else:
         raise ValueError(f"Train mode {args.mode} not supported")
 

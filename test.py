@@ -43,10 +43,10 @@ def split_data(file, train_ratio, val_ratio, test_ratio,output_dir):
     pd.DataFrame(test_indices, columns=['Index']).to_csv(output_dir+"test_0.csv", index=False, header=False)
 
     return train_indices, val_indices, test_indices
-filename = "og_data/test_data_10_filenames.tsv"
-create_model_dataset(filename,"data/sample_10_filenames/all_data.csv")
+filename = "og_data/test_data_small.tsv"
+create_model_dataset(filename,"data/sample_small/all_data.csv")
 
-split_data('data/sample_10_filenames/all_data.csv',0.8,0.1,0.1,'data/sample_10_filenames/')
+split_data('data/sample_small/all_data.csv',0.8,0.1,0.1,'data/sample_small/')
 
 
 

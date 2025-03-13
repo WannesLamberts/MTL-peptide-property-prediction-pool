@@ -107,7 +107,7 @@ def get_average_pool(group):
     return pd.Series([column_averages.tolist()])
 
 if __name__ == "__main__":
-    filename = "og_data/test_data_10_filenames.tsv"
+    filename = "og_data/test_data_small.tsv"
     #filename = "data/sample_1k/all_data.csv"
     df = pd.read_csv(filename, sep="\t")
     lookup_dic = df.groupby('filename').apply(get_average_pool).reset_index()

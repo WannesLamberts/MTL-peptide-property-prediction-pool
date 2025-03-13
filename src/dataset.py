@@ -46,13 +46,6 @@ class MTLPepDataset(Dataset):
         )
         ids = end_padding(ids, self.args.seq_len, self.args.vocab.pad_i)
         task = self.df["task"].iloc[item]
-        if task == "CCS":
-            charge = self.df["Charge"].iloc[item]
-            charge = min(int(charge), 4)
-            one_hot = [0.0 for _ in range(4)]
-            one_hot[charge - 1] = 1.0
-        else:
-            one_hot = [0.0 for _ in range(4)]
         label = self.df["label"].iloc[item]
         standardized_label = self.args.scalers[task].transform([[label]])
 
@@ -60,7 +53,6 @@ class MTLPepDataset(Dataset):
             "token_ids": torch.tensor(ids),
             "standardized_label": torch.tensor(standardized_label[0][0]),
             "task": task,
-            "charge": torch.tensor(one_hot),
             "indx": self.df.index[item],
             "features": self.df.features.iloc[item],
         }
@@ -72,41 +64,14 @@ class MTLPepDataset(Dataset):
         )
         ids = end_padding(ids, self.args.seq_len, self.args.vocab.pad_i)
         task = self.df["task"].iloc[item]
-        if task == "CCS":
-            charge = self.df["Charge"].iloc[item]
-            charge = min(int(charge), 4)
-            one_hot = [0.0 for _ in range(4)]
-            one_hot[charge - 1] = 1.0
-        else:
-            one_hot = [0.0 for _ in range(4)]
         label = self.df["label"].iloc[item]
         standardized_label = self.args.scalers[task].transform([[label]])
-
         return {
             "token_ids": torch.tensor(ids),
             "standardized_label": torch.tensor(standardized_label[0][0]),
             "task": task,
-            "charge": torch.tensor(one_hot),
             "indx": self.df.index[item],
         }
-
-    def _getitem_pretrain(self, item):
-        peptide = self.df[self.pep_col].iloc[item]
-        masked_ids, output_labels = self._mask_token_seq(
-            peptide[: self.args.seq_len]
-        )
-        masked_ids = end_padding(
-            masked_ids, self.args.seq_len, self.args.vocab.pad_i
-        )
-        output_labels = end_padding(
-            output_labels, self.args.seq_len, self.args.vocab.pad_i
-        )
-
-        return {
-            "masked_token_ids": torch.tensor(masked_ids),
-            "label": torch.tensor(output_labels),
-        }
-
     def _mask_token_seq(self, token_seq):
         masked_seq = []
         output_label = []
