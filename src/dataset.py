@@ -106,13 +106,11 @@ def custom_collate(data):
     # Use the default collate function for everything except the task, this becomes a list of strings
     coll_data = default_collate(
         [
-            {k: v for k, v in d.items() if k not in ["task", "indx"]}
+            {k: v for k, v in d.items() if k not in ["indx"]}
             for d in data
         ]
     )
 
-    if "task" in data[0]:
-        coll_data["task"] = [d["task"] for d in data]
     if "indx" in data[0]:
         coll_data["indx"] = [d["indx"] for d in data]
 
