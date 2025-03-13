@@ -18,7 +18,7 @@ from src.util import (
 
 def get_encoding(run, args, run_config):
     args.vocab = pickle.load(open(args.vocab_file, "rb"))
-    args.scalers = pickle.load(open(args.scalers_file, "rb"))
+    args.scalers = pickle.load(open(args.scalers_file, "rb"))['iRT']
 
     args.df_test = args.all_data
 
@@ -87,14 +87,11 @@ def create_model_dataset(df):
     # Rename columns correctly
     df.columns = ['modified_sequence', 'label']
 
-    # Add missing columns
-    df['task'] = 'iRT'
     df['Charge'] = ''  # Empty values
     df['DCCS_sequence'] = ''  # Empty values
     return df
 
 def get_average_pool(group):
-    name = group['filename'].iloc[0]
     df = create_model_dataset(group)
     #df.to_csv(name, index=True)
     best_run = (

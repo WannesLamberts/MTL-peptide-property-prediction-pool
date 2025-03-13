@@ -111,7 +111,7 @@ class LitMTL(pl.LightningModule):
         if len(t_out) > 0:
             # t_out will be optimized to be equal to the standardized label, inverse transform to get original label
             predictions = (
-                self.mtl_config.scalers['iRT']
+                self.mtl_config.scalers
                 .inverse_transform(t_out.cpu().detach())
                 .squeeze(1)
             )

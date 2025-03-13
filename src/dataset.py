@@ -45,14 +45,12 @@ class MTLPepDataset(Dataset):
             peptide[: self.args.seq_len]
         )
         ids = end_padding(ids, self.args.seq_len, self.args.vocab.pad_i)
-        task = self.df["task"].iloc[item]
         label = self.df["label"].iloc[item]
-        standardized_label = self.args.scalers[task].transform([[label]])
+        standardized_label = self.args.scalers.transform([[label]])
 
         return {
             "token_ids": torch.tensor(ids),
             "standardized_label": torch.tensor(standardized_label[0][0]),
-            "task": task,
             "indx": self.df.index[item],
             "features": self.df.features.iloc[item],
         }
@@ -63,13 +61,11 @@ class MTLPepDataset(Dataset):
             peptide[: self.args.seq_len]
         )
         ids = end_padding(ids, self.args.seq_len, self.args.vocab.pad_i)
-        task = self.df["task"].iloc[item]
         label = self.df["label"].iloc[item]
-        standardized_label = self.args.scalers[task].transform([[label]])
+        standardized_label = self.args.scalers.transform([[label]])
         return {
             "token_ids": torch.tensor(ids),
             "standardized_label": torch.tensor(standardized_label[0][0]),
-            "task": task,
             "indx": self.df.index[item],
         }
     def _mask_token_seq(self, token_seq):

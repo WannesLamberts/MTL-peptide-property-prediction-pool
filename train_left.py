@@ -36,16 +36,13 @@ def get_vocab(args):
 def get_scalers(args, df_train=None):
     if args.scalers_file is None:
         scalers = {}
-        for t in args.tasks:
-            train_df_t = df_train[df_train["task"] == t]
-            t_scaler = StandardScaler()
-            if len(train_df_t) > 0:
-                t_scaler.fit(train_df_t["label"].values.reshape(-1, 1))
-            else:
-                # If no training values for a task, create a scaler that does not alter the values
-                t_scaler.fit([[-1.0], [1.0]])
-            scalers[t] = t_scaler
-
+        t_scaler = StandardScaler()
+        if len(df_train) > 0:
+            t_scaler.fit(df_train["label"].values.reshape(-1, 1))
+        else:
+            # If no training values for a task, create a scaler that does not alter the values
+            t_scaler.fit([[-1.0], [1.0]])
+        scalers = t_scaler
         if args.use_1_data_file:
             scalers_path = args.train_i[:-4] + "_scalers.p"
         else:
@@ -158,17 +155,6 @@ def parse_args():
         "(pre)training, it can give unexpected behaviour when e.g. saving predictions",
     )
 
-    # Model parameters
-    parser.add_argument(
-        "-t",
-        "--tasks",
-        type=str,
-        nargs="+",
-        default=["iRT"],
-        choices=["iRT", "CCS"],
-        help="Tasks for the multitask model, currently only 'iRT' and 'CCS' are supported. Default: "
-        "CCS and iRT",
-    )
 
     # General train parameters
     parser.add_argument(
@@ -454,11 +440,8 @@ def post_process_args(args):
         args = argparse.Namespace(**(vars(args) | config_dict))
         print(f"Updated with hpt config: {config_dict}")
 
-    # Sort the tasks so the order will always be the same
-    args.tasks = sorted(args.tasks)
-
     args.name = (
-        f"CONFIG={args.config},TASKS={'_'.join(args.tasks)},MODE={args.mode},"
+        f"CONFIG={args.config},MODE={args.mode},"
         f"PRETRAIN={args.pretrained_model},LR={args.lr},BS={args.bs * args.accumulate_batches},"
         f"OPTIM={args.optim},LOSS={args.loss},CLIP={args.clip_gradients},ACTIVATION={args.activation},"
         f"SCHED={args.scheduler},SIZE={args.hidden_size},NUMLAYERS={args.num_layers}"

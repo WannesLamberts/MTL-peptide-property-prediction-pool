@@ -6,9 +6,6 @@ def apply_index_file(data_df, i_file):
     return data_df.iloc[df_i[0]]
 
 
-def filter_on_tasks(df, tasks):
-    return df[df["task"].isin(tasks)]
-
 
 def read_train_val_test_data(args,lookup_df):
     """
@@ -23,25 +20,15 @@ def read_train_val_test_data(args,lookup_df):
                                how='left')  # You can adjust 'how' to 'left', 'right', or 'outer' based on your need
         all_data.index = original_index
         df_train = (
-            filter_on_tasks(
-                (apply_index_file(all_data, args.train_i)),
-                args.tasks,
-            )
+            apply_index_file(all_data, args.train_i)
             if args.train_i is not None
             else None
         )
-        df_val = (
-            filter_on_tasks(
-                (apply_index_file(all_data, args.val_i)),
-                args.tasks,
-            )
+        df_val = (apply_index_file(all_data, args.val_i)
             if args.val_i is not None
             else None
         )
-        df_test = (
-            filter_on_tasks(
-                apply_index_file(all_data, args.test_i), args.tasks
-            )
+        df_test = (apply_index_file(all_data, args.test_i)
             if args.test_i is not None
             else None
         )

@@ -12,7 +12,6 @@ from torch.optim.lr_scheduler import SequentialLR
 DEFAULT_CONFIG = {
     "config": None,
     "gpus": 1,
-    "tasks": ["iRT"],
     "mode": "supervised",
     "pretrained_model": "none",
     "checkpoint_path": None,
