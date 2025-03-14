@@ -30,41 +30,22 @@ class MTLPepDataset(Dataset):
         return len(self.df)
 
     def __getitem__(self, item):
+        peptide = self.df[self.pep_col].iloc[item]
+        ids = self.args.vocab.convert_tokens_to_ids(
+            peptide[: self.args.seq_len]
+        )
+        ids = end_padding(ids, self.args.seq_len, self.args.vocab.pad_i)
+        label = self.df["label"].iloc[item]
+        standardized_label = self.args.scalers.transform([[label]])
+        dict = {
+            "token_ids": torch.tensor(ids),
+            "standardized_label": torch.tensor(standardized_label[0][0]),
+            "indx": self.df.index[item],
+        }
         if self.args.mode == "supervised":
-            return self._getitem_supervised(item)
-        elif self.args.mode == "pool":
-            return self._getitem_pool(item)
+            dict["features"]=self.df.features.iloc[item]
+        return dict
 
-
-    def _getitem_supervised(self, item):
-        peptide = self.df[self.pep_col].iloc[item]
-        ids = self.args.vocab.convert_tokens_to_ids(
-            peptide[: self.args.seq_len]
-        )
-        ids = end_padding(ids, self.args.seq_len, self.args.vocab.pad_i)
-        label = self.df["label"].iloc[item]
-        standardized_label = self.args.scalers.transform([[label]])
-
-        return {
-            "token_ids": torch.tensor(ids),
-            "standardized_label": torch.tensor(standardized_label[0][0]),
-            "indx": self.df.index[item],
-            "features": self.df.features.iloc[item],
-        }
-
-    def _getitem_pool(self, item):
-        peptide = self.df[self.pep_col].iloc[item]
-        ids = self.args.vocab.convert_tokens_to_ids(
-            peptide[: self.args.seq_len]
-        )
-        ids = end_padding(ids, self.args.seq_len, self.args.vocab.pad_i)
-        label = self.df["label"].iloc[item]
-        standardized_label = self.args.scalers.transform([[label]])
-        return {
-            "token_ids": torch.tensor(ids),
-            "standardized_label": torch.tensor(standardized_label[0][0]),
-            "indx": self.df.index[item],
-        }
 
 def custom_collate(data):
     # Use the default collate function for everything except the task, this becomes a list of strings

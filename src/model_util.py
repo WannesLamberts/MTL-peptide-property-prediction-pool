@@ -60,13 +60,12 @@ def create_model(args):
     )
 
     if args.mode == "supervised":
-        if args.pretrained_model == "own":
-            model = LitMTL.load_from_checkpoint(
-                args.checkpoint_path,
-                strict=False,
-                mtl_config=args,
-                bert_config=bert_config,
-            )
+        model = LitMTL.load_from_checkpoint(
+            args.checkpoint_path,
+            strict=False,
+            mtl_config=args,
+            bert_config=bert_config,
+        )
     else:
         raise ValueError(f"Train mode {args.mode} not supported")
 
