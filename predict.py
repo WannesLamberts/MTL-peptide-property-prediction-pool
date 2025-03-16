@@ -1,5 +1,6 @@
 import os
 import pickle
+import sys
 from argparse import Namespace
 
 import pandas as pd
@@ -26,7 +27,7 @@ def predict(run, args, run_config):
     #args.df_test = all_data_df
     args.df_test = apply_index_file(all_data_df, args.predict_i)
 
-    lookup_df = pd.read_parquet('test.parquet', engine='pyarrow')
+    lookup_df = pd.read_parquet(args.lookup_file, engine='pyarrow')
     original_index = args.df_test.index
     args.df_test = args.df_test.merge(lookup_df, on='filename', how='left')
     args.df_test.index = original_index  # Restore original index
@@ -68,12 +69,13 @@ def predict(run, args, run_config):
     trainer.test(lit_model, dataloaders=predict_dl)
 
 
-def predict_run(run, all_data_file, predict_i):
+def predict_run(run, all_data_file, predict_i,lookup_file):
     data_config = {
         "all_data_file": all_data_file,
         "predict_i": predict_i,
         "vocab_file": os.path.join(run, "vocab.p"),
         "scalers_file": os.path.join(run, "scalers.p"),
+        "lookup_file": lookup_file,
     }
 
     run_config = split_run_config(run)
@@ -82,30 +84,13 @@ def predict_run(run, all_data_file, predict_i):
     args.predict_file_name = "predict"
     predict(run, args, run_config)
 
-def create_model_dataset(df):
-
-    # Select relevant columns
-    df = df[['sequence', 'iRT','filename']]
-
-    # Rename columns correctly
-    df.columns = ['modified_sequence', 'label','filename']
-
-    # Add missing columns
-    df['task'] = 'iRT'
-    df['Charge'] = ''  # Empty values
-    df['DCCS_sequence'] = ''  # Empty values
-    return df
 
 
 if __name__ == "__main__":
-
-    # Example on how to create predictions with an existing model
-    best_run = (
-        "lightning_logs/CONFIG=test,MODE=supervised,PRETRAIN=own,LR=0.0003262821190296,BS=1024,OPTIM=adamw,LOSS=mae,CLIP=True,ACTIVATION=gelu,SCHED=warmup_decay_cos,SIZE=180,NUMLAYERS=9/version_0"
-    )
-
+    dir = sys.argv[2]
     predict_run(
-        best_run,
-        "data/sample_small/all_data.csv",
-        "data/sample_small/test_0.csv",
+        sys.argv[1],
+        dir+"all_data.csv",
+        dir+"test_0.csv",
+        dir+"lookup.parquet"
     )

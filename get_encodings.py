@@ -1,5 +1,6 @@
 import os
 import pickle
+import sys
 from argparse import Namespace
 
 import pytorch_lightning as pl
@@ -9,7 +10,8 @@ from torch.utils.data import DataLoader
 
 from src.dataset import MTLPepDataset, custom_collate
 from src.lit_model import LitMTL
-
+from src.read_data import apply_index_file
+from src.utils_data import create_dataset_encoding
 from src.util import (
     DEFAULT_CONFIG,
     check_checkpoint_path,
@@ -92,22 +94,22 @@ def create_model_dataset(df):
     return df
 
 def get_average_pool(group):
-    df = create_model_dataset(group)
     #df.to_csv(name, index=True)
     best_run = (
         "lightning_logs/CONFIG=mtl_5foldcv_pretrain_0,TASKS=CCS_iRT,MODE=pretrain,PRETRAIN=none,LR=0.0001940554482365,BS=1024,OPTIM=adam,LOSS=mae,CLIP=False,ACTIVATION=gelu,SCHED=warmup,SIZE=180,NUMLAYERS=9/version_0"
     )
-    pred = get_encoding_run(best_run, df)
+    pred = get_encoding_run(best_run, group)
     pred = torch.cat(pred, dim=0)  # Assuming batch dimension is 0
     column_averages = pred.mean(dim=0)
     return pd.Series([column_averages.tolist()])
 
 if __name__ == "__main__":
-    filename = "og_data/test_data_small.tsv"
-    #filename = "data/sample_1k/all_data.csv"
-    df = pd.read_csv(filename, sep="\t")
+    directory = sys.argv[1]
+    df = pd.read_csv(directory+"all_data.csv", index_col=0)
+    df = apply_index_file(df,directory+"train_0.csv")
+
     lookup_dic = df.groupby('filename').apply(get_average_pool).reset_index()
     lookup_dic.columns=['filename','features']
-    lookup_dic.to_parquet('test.parquet',engine='pyarrow')
+    lookup_dic.to_parquet(directory+'lookup.parquet',engine='pyarrow')
 
 

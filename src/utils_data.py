@@ -1,26 +1,46 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
+import os
 
 
-def create_model_dataset(file,output):
-    df = pd.read_csv(file, sep='\t', index_col=False)
+def create_dataset(file, output_dir, filter_filename=None):
+    df = pd.read_parquet(file, engine="pyarrow")
+
     # Select relevant columns
-    df = df[['sequence', 'iRT','filename']]
+    df = df[['sequence', 'iRT', 'filename']]
 
     # Rename columns correctly
-    df.columns = ['modified_sequence', 'label','filename']
+    df.columns = ['modified_sequence', 'label', 'filename']
 
     # Add missing columns
     df['task'] = 'iRT'
+
+    # Filter to only keep the first 50 unique values of x if option is enabled
+    if filter_filename:
+        unique_filename_values = df['filename'].unique()[:filter_filename]
+        df = df[df['filename'].isin(unique_filename_values)]
+
+    os.makedirs(os.path.dirname(output_dir), exist_ok=True)
+
+    df.to_csv(output_dir + "all_data.csv", index=True)
+
+    split_data(df, 0.8, 0.1, 0.1, output_dir)
+
+
+def create_dataset_encoding(df):
+
+    # Select relevant columns
+    df = df[['sequence', 'iRT']]
+
+    # Rename columns correctly
+    df.columns = ['modified_sequence', 'label']
+
     df['Charge'] = ''  # Empty values
     df['DCCS_sequence'] = ''  # Empty values
+    return df
 
-    df.to_csv(output, index=True)
+def split_data(df, train_ratio, val_ratio, test_ratio,output_dir):
 
-
-def split_data(file, train_ratio, val_ratio, test_ratio,output_dir):
-    # Load the dataset
-    df = pd.read_csv(file, sep='\t')
 
     # Ensure the sum of ratios is 1
     assert train_ratio + val_ratio + test_ratio == 1, "Ratios must sum to 1"
@@ -43,31 +63,6 @@ def split_data(file, train_ratio, val_ratio, test_ratio,output_dir):
     pd.DataFrame(test_indices, columns=['Index']).to_csv(output_dir+"test_0.csv", index=False, header=False)
 
     return train_indices, val_indices, test_indices
-filename = "og_data/test_data_small.tsv"
-create_model_dataset(filename,"data/sample_small/all_data.csv")
-
-split_data('data/sample_small/all_data.csv',0.8,0.1,0.1,'data/sample_small/')
 
 
-
-
-
-
-
-
-
-
-
-
-
-# df = pd.read_csv("og_data/test_data_calibrated_merged.tsv", delimiter="\t")
-#
-# # Select 10 random filenames from the 'filename' column
-# selected_filenames = df['filename'].sample(n=10, random_state=42).tolist()
-#
-# # Create a new DataFrame with only rows where 'filename' is in the selected filenames
-# filtered_df = df[df['filename'].isin(selected_filenames)]
-#
-# # Display the filtered DataFrame
-# print(filtered_df)
-# filtered_df.to_csv("og_data/test_data_10_filenames.tsv", sep="\t", index=False)
+#create_dataset("../dataset.parquet", "data/par/")
