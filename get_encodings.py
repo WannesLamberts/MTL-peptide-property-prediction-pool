@@ -2,6 +2,7 @@ import os
 import pickle
 import sys
 from argparse import Namespace
+import numpy as np
 
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import TensorBoardLogger
@@ -81,35 +82,44 @@ import pandas as pd
 import torch
 
 
-def create_model_dataset(df):
-
-    # Select relevant columns
-    df = df[['sequence', 'iRT']]
-
-    # Rename columns correctly
-    df.columns = ['modified_sequence', 'label']
-
-    df['Charge'] = ''  # Empty values
-    df['DCCS_sequence'] = ''  # Empty values
-    return df
-
-def get_average_pool(group):
-    #df.to_csv(name, index=True)
+def test(df):
     best_run = (
         "lightning_logs/CONFIG=mtl_5foldcv_pretrain_0,TASKS=CCS_iRT,MODE=pretrain,PRETRAIN=none,LR=0.0001940554482365,BS=1024,OPTIM=adam,LOSS=mae,CLIP=False,ACTIVATION=gelu,SCHED=warmup,SIZE=180,NUMLAYERS=9/version_0"
     )
-    pred = get_encoding_run(best_run, group)
-    pred = torch.cat(pred, dim=0)  # Assuming batch dimension is 0
-    column_averages = pred.mean(dim=0)
-    return pd.Series([column_averages.tolist()])
+
+    pred = get_encoding_run(best_run, df)
+    predictions = []
+    indices = []
+
+    for batch_tensor, batch_indices in pred:
+        batch_np = batch_tensor.numpy()
+
+        for i, idx in enumerate(batch_indices):
+            indices.append(idx)
+            predictions.append(batch_np[i])
+    feature_cols = [f'feature_{i}' for i in range(len(predictions[0]))]
+    prediction_df = pd.DataFrame(
+        predictions,
+        index=indices,
+        columns=feature_cols)
+    result_df = df.join(prediction_df, how='left')
+    mean_by_filename = result_df.groupby('filename')[feature_cols].mean()
+    mean_by_filename['features'] = mean_by_filename[feature_cols].values.tolist()
+
+    result = mean_by_filename[['features']]
+    return result
+
 
 if __name__ == "__main__":
     directory = sys.argv[1]
-    df = pd.read_csv(directory+"all_data.csv", index_col=0)
-    df = apply_index_file(df,directory+"train_0.csv")
+    df = pd.read_csv(directory + "all_data.csv", index_col=0)
+    df = apply_index_file(df, directory + "train_0.csv")
+    result = test(df)
+    result.to_parquet(directory+'lookup.parquet',engine='pyarrow')
 
-    lookup_dic = df.groupby('filename').apply(get_average_pool).reset_index()
-    lookup_dic.columns=['filename','features']
-    lookup_dic.to_parquet(directory+'lookup.parquet',engine='pyarrow')
+
+
+
+
 
 

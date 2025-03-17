@@ -52,7 +52,7 @@ def get_scalers(args, df_train=None):
         scalers = pickle.load(open(args.scalers_file, "rb"))
     return scalers
 
-
+import numpy as np
 def train(args):
     torch.set_float32_matmul_precision("medium")
     print(f"Training with this configuration:\n{args}")
@@ -60,7 +60,9 @@ def train(args):
     print(f"Logging to {logger.log_dir}")
 
     print("Reading train and validation data")
-    lookup_df = pd.read_parquet('test.parquet', engine='pyarrow')
+    lookup_df = pd.read_parquet('data/5_tasks/lookup.parquet', engine='pyarrow')
+
+
     args.df_train, args.df_val, args.df_test = read_train_val_test_data(args,lookup_df)
 
     print("Creating or loading the vocab")
@@ -91,7 +93,7 @@ def train(args):
     lit_model = create_model(args)
 
     trainer = pl.Trainer(
-        max_epochs=1,
+        max_epochs=5,
         min_epochs=15,
         accelerator="gpu",
         devices=args.gpus,

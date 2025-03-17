@@ -52,7 +52,7 @@ class LitMTL(pl.LightningModule):
 
     def predict_step(self, batch, batch_idx):
         (t_out,) = self.model(batch["token_ids"])
-        return t_out
+        return t_out,batch["indx"]
 
     def validation_step(self, batch, batch_idx):
         loss = self.supervised_step(batch, batch_idx, "val_predictions")

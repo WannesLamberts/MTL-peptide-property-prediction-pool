@@ -46,8 +46,9 @@ class MTLPepDataset(Dataset):
             dict["features"]=self.df.features.iloc[item]
         return dict
 
-
+import numpy as np
 def custom_collate(data):
+
     # Use the default collate function for everything except the task, this becomes a list of strings
     coll_data = default_collate(
         [
