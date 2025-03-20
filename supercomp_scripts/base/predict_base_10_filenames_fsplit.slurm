@@ -13,6 +13,6 @@ apptainer shell --bind ${VSC_SCRATCH}/model/MTL-peptide-property-prediction-base
 cd /app
 
 # Run the Python script
-python predict.py --run "lightning_logs/CONFIG=base_10_filenames_fsplit,TASKS=CCS_iRT,MODE=supervised,PRETRAIN=tape,LR=0.0003105497384738,BS=1024,OPTIM=adamw,LOSS=mae,CLIP=False,ACTIVATION=gelu,SCHED=warmup_decay_cos,SIZE=768,NUMLAYERS=12/version_0" --all_data_file "data/10_filenames_fsplit/all_data.csv" --predict_i "data/10_filenames_fsplit/test_0.csv"
+python predict.py --run "lightning_logs/CONFIG=base_10_filenames_fsplit,TASKS=CCS_iRT,MODE=supervised,PRETRAIN=own,LR=0.0003105497384738,BS=1024,OPTIM=adamw,LOSS=mae,CLIP=False,ACTIVATION=gelu,SCHED=warmup_decay_cos,SIZE=768,NUMLAYERS=12/version_0" --all_data_file "data/10_filenames_fsplit/all_data.csv" --predict_i "data/10_filenames_fsplit/test_0.csv"
 
 EOF
