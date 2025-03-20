@@ -13,6 +13,6 @@ apptainer shell --bind ${VSC_SCRATCH}/model/MTL-peptide-property-prediction-pool
 cd /app
 
 # Run the Python script
-python train.py --config "pool_1k_rsplit" -p own --checkpoint-id 0 -c --data-file data/1k_rsplit/all_data.csv --train-i data/1k_rsplit/train_0.csv --val-i data/1k_rsplit/val_0.csv --test-i data/1k_rsplit/test_0.csv --hpt-config hpt/mtl_hpt_supervised_none.csv --hpt-id 21 --vocab-file data/1k_rsplit/vocab.p --lookup data/1k_rsplit/loopkup.parquet
+python train.py --config "pool_1k_rsplit" -p own --checkpoint-id 0 -c --data-file data/1k_rsplit/all_data.csv --train-i data/1k_rsplit/train_0.csv --val-i data/1k_rsplit/val_0.csv --test-i data/1k_rsplit/test_0.csv --hpt-config hpt/mtl_hpt_supervised_none.csv --hpt-id 21 --vocab-file data/1k_rsplit/vocab.p --lookup data/1k_rsplit/lookup.parquet
 
 EOF
