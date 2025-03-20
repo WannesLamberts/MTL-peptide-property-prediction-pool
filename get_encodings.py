@@ -82,9 +82,9 @@ import pandas as pd
 import torch
 
 
-def get_mean_pools(df):
+def get_mean_pools(df,run):
     best_run = (
-        "lightning_logs/CONFIG=mtl_5foldcv_pretrain_0,TASKS=CCS_iRT,MODE=pretrain,PRETRAIN=none,LR=0.0001940554482365,BS=1024,OPTIM=adam,LOSS=mae,CLIP=False,ACTIVATION=gelu,SCHED=warmup,SIZE=180,NUMLAYERS=9/version_0"
+        run
     )
     pred = get_encoding_run(best_run, df)
     # Collect all predictions in a list (preallocate memory if possible)
@@ -110,15 +110,22 @@ def get_mean_pools(df):
     result = mean_by_filename[['features']]
     return result
 
+# if __name__ == "__main__":
+#     directory = sys.argv[1]
+#     df = pd.read_csv(directory + "all_data.csv", index_col=0)
+#     #df = apply_index_file(df, directory + "train_0.csv")
+#     result = get_mean_pools(df)
+#     result.to_parquet(directory+'lookup.parquet',engine='pyarrow')
+
+
 if __name__ == "__main__":
-    directory = sys.argv[1]
-    df = pd.read_csv(directory + "all_data.csv", index_col=0)
-    #df = apply_index_file(df, directory + "train_0.csv")
-    result = get_mean_pools(df)
-    result.to_parquet(directory+'lookup.parquet',engine='pyarrow')
-
-
-
+    dir = sys.argv[2]
+    df = pd.read_csv(dir + "all_data.csv", index_col=0)
+    result=get_mean_pools(
+        df,
+        sys.argv[1]
+    )
+    result.to_parquet(dir + 'lookup.parquet', engine='pyarrow')
 
 
 
