@@ -8,5 +8,6 @@ import pandas as pd
 # print(len(df))
 # df.to_parquet('raw_data/1k_rows.parquet', engine='pyarrow')
 #create_dataset("raw_data/70_task.parquet", "data/5_tasks/",20)
-#create_dataset("raw_data/80_tasks.parquet", "data/200_filenames/",200,split_mode="filename")
+#create_dataset("raw_data/80_tasks.parquet", "data/10_filenames/",10,split_mode="filename")
+#create_dataset("raw_data/80_tasks.parquet", "data/1k_rows/",split_mode="regular",amount=1000)
 

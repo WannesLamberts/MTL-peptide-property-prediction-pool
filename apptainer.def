@@ -16,8 +16,3 @@ From: continuumio/miniconda3
     # Activate the conda environment when entering the container
     export PATH="/opt/conda/envs/MTL-pep-prop/bin:$PATH"
     cd /app
-
-
-%runscript
-    # Default command that runs when the container is executed
-    exec python /app/main.py  # Replace with the appropriate command for your project

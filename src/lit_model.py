@@ -256,7 +256,7 @@ class LitMTL(pl.LightningModule):
                 else self.mtl_config.df_test
             )
             predictions_df = self._add_predictions_to_data(
-                data_df, predictions_df
+                data_df.drop(columns=['features']), predictions_df
             )
             predictions_df.to_csv(
                 os.path.join(

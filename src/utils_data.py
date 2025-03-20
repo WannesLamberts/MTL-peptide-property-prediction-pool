@@ -15,7 +15,7 @@ def create_dataset_encoding(df):
     df['DCCS_sequence'] = ''  # Empty values
     return df
 
-def create_dataset(file, output_dir, filter_filename=None,split_mode=None):
+def create_dataset(file, output_dir, filter_filename=None,split_mode=None,amount=None):
     df = pd.read_parquet(file, engine="pyarrow")
 
     # Select relevant columns
@@ -27,16 +27,15 @@ def create_dataset(file, output_dir, filter_filename=None,split_mode=None):
     # Add missing columns
     df['task'] = 'iRT'
 
-    # Filter to only keep the first 50 unique values of x if option is enabled
     if filter_filename:
         unique_filename_values = df['filename'].unique()[:filter_filename]
         df = df[df['filename'].isin(unique_filename_values)]
     print(len(df))
     os.makedirs(os.path.dirname(output_dir), exist_ok=True)
-
+    if amount:
+        df = df.head(amount)
     df.to_csv(output_dir + "all_data.csv", index=True)
     if split_mode == "regular":
-
         split_data_regular(df, 0.8, 0.1, 0.1, output_dir)
     elif split_mode =="filename":
         split_data_filename(df, 0.8, 0.1, 0.1, output_dir)
@@ -88,6 +87,3 @@ def split_data_regular(df, train_ratio, val_ratio, test_ratio,output_dir):
     pd.DataFrame(test_indices, columns=['Index']).to_csv(output_dir+"test_0.csv", index=False, header=False)
 
     return train_indices, val_indices, test_indices
-
-
-#create_dataset("../dataset.parquet", "data/par/")

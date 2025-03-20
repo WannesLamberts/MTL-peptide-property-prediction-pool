@@ -60,7 +60,7 @@ def train(args):
     print(f"Logging to {logger.log_dir}")
 
     print("Reading train and validation data")
-    lookup_df = pd.read_parquet('data/5_tasks/lookup.parquet', engine='pyarrow')
+    lookup_df = pd.read_parquet(args.lookup, engine='pyarrow')
 
 
     args.df_train, args.df_val, args.df_test = read_train_val_test_data(args,lookup_df)
@@ -393,7 +393,12 @@ def parse_args():
         type=int,
         help="The id from the hpt-config file to use",
     )
-
+    parser.add_argument(
+        "--lookup",
+        default=None,
+        type=str,
+        help="the lookup table for the pools",
+    )
     args = parser.parse_args()
 
     args = post_process_args(args)
