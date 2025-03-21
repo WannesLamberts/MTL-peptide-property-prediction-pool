@@ -13,6 +13,6 @@ apptainer shell --bind ${VSC_SCRATCH}/model/MTL-peptide-property-prediction-pool
 cd /app
 
 # Run the Python script
-python predict.py --run "lightning_logs/CONFIG=pool_200_filenames_fsplit,TASKS=CCS_iRT,MODE=supervised,PRETRAIN=own,LR=0.0003105497384738,BS=1024,OPTIM=adamw,LOSS=mae,CLIP=False,ACTIVATION=gelu,SCHED=warmup_decay_cos,SIZE=768,NUMLAYERS=12/version_0" "data/200_filenames_fsplit/"
+python predict.py "lightning_logs/CONFIG=pool_200_filenames_fsplit,TASKS=CCS_iRT,MODE=supervised,PRETRAIN=own,LR=0.0003105497384738,BS=1024,OPTIM=adamw,LOSS=mae,CLIP=False,ACTIVATION=gelu,SCHED=warmup_decay_cos,SIZE=768,NUMLAYERS=12/version_0" "data/200_filenames_fsplit/"
 
 EOF
