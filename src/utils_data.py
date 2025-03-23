@@ -15,7 +15,7 @@ def create_dataset_encoding(df):
     df['DCCS_sequence'] = ''  # Empty values
     return df
 
-def create_dataset(file, output_dir, filter_filename=None,split_mode=None,amount=None):
+def create_dataset(file, out_file, filter_filename=None,amount=None):
     df = pd.read_parquet(file, engine="pyarrow")
 
     # Select relevant columns
@@ -30,15 +30,29 @@ def create_dataset(file, output_dir, filter_filename=None,split_mode=None,amount
     if filter_filename:
         unique_filename_values = df['filename'].unique()[:filter_filename]
         df = df[df['filename'].isin(unique_filename_values)]
-    print(len(df))
+
+    os.makedirs(os.path.dirname(out_file), exist_ok=True)
+    if amount:
+        df = df.head(amount)
+    df.to_csv(out_file, index=True)
+
+
+def split_data(file,train_ratio=0.8, val_ratio=0.1,test_ratio=0.1,split_mode="regular",filter_filename=None,amount=None):
+    df = pd.read_csv(file)
+    if filter_filename:
+        unique_filename_values = df['filename'].unique()[:filter_filename]
+        df = df[df['filename'].isin(unique_filename_values)]
+    output_dir = os.path.dirname(file)+f"/filenames={filter_filename},amount={amount},split={split_mode}/"
     os.makedirs(os.path.dirname(output_dir), exist_ok=True)
     if amount:
         df = df.head(amount)
-    df.to_csv(output_dir + "all_data.csv", index=True)
     if split_mode == "regular":
-        split_data_regular(df, 0.8, 0.1, 0.1, output_dir)
+        split_data_regular(df, train_ratio, val_ratio, test_ratio, output_dir)
     elif split_mode =="filename":
-        split_data_filename(df, 0.8, 0.1, 0.1, output_dir)
+        split_data_filename(df, train_ratio, val_ratio, test_ratio, output_dir)
+    elif split_mode == "filename_ratio":
+        split_data_filename_regular(df, train_ratio, val_ratio, test_ratio, output_dir)
+    df.index.to_series().to_csv(os.path.join(output_dir, "all_indices.csv"), index=False, header=False)
 
 
 def split_data_filename(df, train_ratio, val_ratio, test_ratio,output_dir):
@@ -59,15 +73,14 @@ def split_data_filename(df, train_ratio, val_ratio, test_ratio,output_dir):
 
     # Save indices to CSV files
     os.makedirs(output_dir, exist_ok=True)
-    pd.DataFrame(train_indices).to_csv(os.path.join(output_dir, "train_0.csv"), index=False, header=False)
-    pd.DataFrame(val_indices).to_csv(os.path.join(output_dir, "val_0.csv"), index=False, header=False)
-    pd.DataFrame(test_indices).to_csv(os.path.join(output_dir, "test_0.csv"), index=False, header=False)
+    pd.DataFrame(train_indices).to_csv(os.path.join(output_dir, "train.csv"), index=False, header=False)
+    pd.DataFrame(val_indices).to_csv(os.path.join(output_dir, "val.csv"), index=False, header=False)
+    pd.DataFrame(test_indices).to_csv(os.path.join(output_dir, "test.csv"), index=False, header=False)
 
     return train_indices, val_indices, test_indices
 
 
 def split_data_regular(df, train_ratio, val_ratio, test_ratio,output_dir):
-
 
     # Get indices before splitting
     indices = df.index.to_numpy()
@@ -82,8 +95,53 @@ def split_data_regular(df, train_ratio, val_ratio, test_ratio,output_dir):
     val_indices, test_indices = train_test_split(temp_indices, test_size=(1 - val_size), random_state=42)
 
     # Save indices to CSV files
-    pd.DataFrame(train_indices, columns=['Index']).to_csv(output_dir+"train_0.csv", index=False, header=False)
-    pd.DataFrame(val_indices, columns=['Index']).to_csv(output_dir+"val_0.csv", index=False, header=False)
-    pd.DataFrame(test_indices, columns=['Index']).to_csv(output_dir+"test_0.csv", index=False, header=False)
+    pd.DataFrame(train_indices, columns=['Index']).to_csv(output_dir+"train.csv", index=False, header=False)
+    pd.DataFrame(val_indices, columns=['Index']).to_csv(output_dir+"val.csv", index=False, header=False)
+    pd.DataFrame(test_indices, columns=['Index']).to_csv(output_dir+"test.csv", index=False, header=False)
 
     return train_indices, val_indices, test_indices
+
+def split_data_filename_regular(df, train_ratio, val_ratio, test_ratio, output_dir):
+    # Verify ratios sum to 1
+    if abs(train_ratio + val_ratio + test_ratio - 1.0) > 1e-10:
+        raise ValueError("Ratios must sum to 1.0")
+
+    # Initialize lists to store indices for all splits
+    all_train_indices = []
+    all_val_indices = []
+    all_test_indices = []
+
+    # Group by pool and split each group
+    for pool_name, group in df.groupby('filename'):
+        # Get indices for this pool
+        indices = group.index.to_numpy()
+
+        # First split: separate training from temp (val + test)
+        train_indices, temp_indices = train_test_split(
+            indices,
+            train_size=train_ratio,
+            random_state=42
+        )
+
+        # Calculate proportion for validation from remaining temp
+        remaining_ratio = val_ratio + test_ratio
+        val_size = val_ratio / remaining_ratio if remaining_ratio > 0 else 0
+
+        # Second split: separate validation from test
+        val_indices, test_indices = train_test_split(
+            temp_indices,
+            train_size=val_size,
+            random_state=42
+        )
+
+        # Append to master lists
+        all_train_indices.extend(train_indices)
+        all_val_indices.extend(val_indices)
+        all_test_indices.extend(test_indices)
+
+    # Save indices to CSV files
+    pd.DataFrame(all_train_indices, columns=['Index']).to_csv(output_dir + "train.csv", index=False, header=False)
+    pd.DataFrame(all_val_indices, columns=['Index']).to_csv(output_dir + "val.csv", index=False, header=False)
+    pd.DataFrame(all_test_indices, columns=['Index']).to_csv(output_dir + "test.csv", index=False, header=False)
+
+    return all_train_indices, all_val_indices, all_test_indices

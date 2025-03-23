@@ -1,3 +1,4 @@
+import argparse
 import os
 import pickle
 import sys
@@ -23,9 +24,11 @@ def get_encoding(run, args, run_config):
     args.vocab = pickle.load(open(args.vocab_file, "rb"))
     args.scalers = pickle.load(open(args.scalers_file, "rb"))['iRT']
 
-    args.df_test = args.all_data
+    args.df_predict = args.all_data
+    #args.df_predict = apply_index_file(args.all_data, args.predict_i)
 
-    predict_ds = MTLPepDataset(args.df_test, args)
+
+    predict_ds = MTLPepDataset(args.df_predict, args)
     predict_dl = DataLoader(
         predict_ds,
         batch_size=args.bs,
@@ -110,22 +113,34 @@ def get_mean_pools(df,run):
     result = mean_by_filename[['features']]
     return result
 
-# if __name__ == "__main__":
-#     directory = sys.argv[1]
-#     df = pd.read_csv(directory + "all_data.csv", index_col=0)
-#     #df = apply_index_file(df, directory + "train_0.csv")
-#     result = get_mean_pools(df)
-#     result.to_parquet(directory+'lookup.parquet',engine='pyarrow')
-
 
 if __name__ == "__main__":
-    dir = sys.argv[2]
-    df = pd.read_csv(dir + "all_data.csv", index_col=0)
-    result=get_mean_pools(
-        df,
-        sys.argv[1]
+    # Setup argparse to handle command-line arguments
+    parser = argparse.ArgumentParser(description="Run prediction with a trained model")
+
+    # Add arguments to the parser
+    parser.add_argument(
+        "--run", type=str, required=True, help="Path to the model run (e.g., best_run directory)"
     )
-    result.to_parquet(dir + 'lookup.parquet', engine='pyarrow')
+    parser.add_argument(
+        "--all_data_file", type=str, required=True, help="Path to the all data CSV file"
+    )
+    parser.add_argument(
+        "--predict_i", type=str, required=True, help="Path to the prediction index file"
+    )
+    parser.add_argument(
+        "--out_file", type=str, required=True, help="Path to the prediction index file"
+    )
+
+    # Parse the arguments
+    args = parser.parse_args()
+    predict_df = pd.read_csv(args.all_data_file, index_col=0)
+    predict_df = apply_index_file(predict_df, args.predict_i)
+    result=get_mean_pools(
+        predict_df,
+        args.run
+    )
+    result.to_parquet(args.out_file, engine='pyarrow')
 
 
 

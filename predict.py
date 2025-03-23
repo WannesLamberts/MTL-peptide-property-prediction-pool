@@ -1,3 +1,4 @@
+import argparse
 import os
 import pickle
 import sys
@@ -85,12 +86,26 @@ def predict_run(run, all_data_file, predict_i,lookup_file):
     predict(run, args, run_config)
 
 
-
 if __name__ == "__main__":
-    dir = sys.argv[2]
-    predict_run(
-        sys.argv[1],
-        dir+"all_data.csv",
-        dir+"test_0.csv",
-        dir+"lookup.parquet"
+    # Setup argparse to handle command-line arguments
+    parser = argparse.ArgumentParser(description="Run prediction with a trained model")
+
+    # Add arguments to the parser
+    parser.add_argument(
+        "--run", type=str, required=True, help="Path to the model run (e.g., best_run directory)"
     )
+    parser.add_argument(
+        "--all_data_file", type=str, required=True, help="Path to the all data CSV file"
+    )
+    parser.add_argument(
+        "--predict_i", type=str, required=True, help="Path to the prediction index file"
+    )
+    parser.add_argument(
+        "--lookup_file", type=str, required=True, help="Path to the prediction index file"
+    )
+
+    # Parse the arguments
+    args = parser.parse_args()
+
+    # Call the prediction function with command-line arguments
+    predict_run(args.run, args.all_data_file, args.predict_i,args.lookup_file)

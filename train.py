@@ -19,7 +19,6 @@ from src.util import (
 )
 from src.vocab import create_vocab
 
-
 def get_vocab(args):
     if args.vocab_file is None:
         vocab = create_vocab(args)
@@ -93,7 +92,7 @@ def train(args):
     lit_model = create_model(args)
 
     trainer = pl.Trainer(
-        max_epochs=-1,
+        max_epochs=3,
         min_epochs=15,
         accelerator="gpu",
         devices=args.gpus,
