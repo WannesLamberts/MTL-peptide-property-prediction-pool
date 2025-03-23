@@ -6,6 +6,10 @@
 #SBATCH --partition=ampere_gpu
 #SBATCH --gres=gpu:1
 
+FILENAMES=$1
+SPLIT=$2
+PREDICT=$3
+
 # Run the container
 apptainer shell --bind ${VSC_SCRATCH}/model/MTL-peptide-property-prediction-pool:/app --bind ${VSC_SCRATCH}/model/data:/app/data --bind ${VSC_SCRATCH}/model/lightning_logs:/app/lightning_logs --nv ${VSC_SCRATCH}/model/environment/environment.sif<<EOF
 
@@ -13,6 +17,6 @@ apptainer shell --bind ${VSC_SCRATCH}/model/MTL-peptide-property-prediction-pool
 cd /app
 
 # Run the Python script
-python get_encodings.py --run "lightning_logs/CONFIG=mtl_5foldcv_pretrain_0,TASKS=CCS_iRT,MODE=pretrain,PRETRAIN=none,LR=0.0001940554482365,BS=1024,OPTIM=adam,LOSS=mae,CLIP=False,ACTIVATION=gelu,SCHED=warmup,SIZE=180,NUMLAYERS=9/version_0" --all_data_file "data/200_filenames/all_data.csv" --predict_i "data/100_filenames/filenames=10,amount=None,split=filename/all_indices.csv" --out_file "data/200_filenames/filenames=100,amount=None,split=filename/lookup.parquet"
+python get_encodings.py --run "lightning_logs/CONFIG=mtl_5foldcv_pretrain_0,TASKS=CCS_iRT,MODE=pretrain,PRETRAIN=none,LR=0.0001940554482365,BS=1024,OPTIM=adam,LOSS=mae,CLIP=False,ACTIVATION=gelu,SCHED=warmup,SIZE=180,NUMLAYERS=9/version_0" --all_data_file "data/200_filenames/all_data.csv" --predict_i "data/200_filenames/filenames=$1,amount=None,split=$2/$3" --out_file "data/200_filenames/filenames=$1,amount=None,split=$2/lookup.parquet"
 
 EOF
