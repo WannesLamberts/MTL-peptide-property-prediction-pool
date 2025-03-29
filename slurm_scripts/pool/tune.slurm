@@ -6,7 +6,8 @@
 #SBATCH --gres=gpu:1
 
 DATASET=$1
-FILENAMES=$2
+CONFIG=$2
+ID=$3
 
 # Run the container
 apptainer shell --bind ${VSC_SCRATCH}/model/MTL-peptide-property-prediction-pool:/app --bind ${VSC_SCRATCH}/model/data:/app/data --bind ${VSC_SCRATCH}/model/lightning_logs:/app/lightning_logs --nv ${VSC_SCRATCH}/model/environment/environment.sif<<EOF
@@ -15,5 +16,5 @@ apptainer shell --bind ${VSC_SCRATCH}/model/MTL-peptide-property-prediction-pool
 cd /app
 
 # Run the Python script
-python train.py --config "pool_${DATASET}_${FILENAMES}" -p own --checkpoint-id 0 -c --data-file "data/$DATASET/all_data.csv" --train-i "data/$DATASET/train_subsets/train_${FILENAMES}.csv" --val-i "data/$DATASET/val.csv" --hpt-config "hpt/mtl_hpt_finetune_own.csv" --hpt-id 27 --vocab-file "data/$DATASET/vocab.p" --lookup "data/$DATASET/lookup.parquet"
+python param_tune.py--config "scheduler" -i $ID -p own --checkpoint-id 0 --data-file "data/$DATASET/all_data.csv" --train-i "data/$DATASET/train.csv" --val-i "data/$DATASET/val.csv" --vocab-file "data/$DATASET/vocab.p" --lookup "data/$DATASET/lookup.parquet"
 EOF
