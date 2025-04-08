@@ -33,7 +33,7 @@ def create_csv(file):
 
 
 
-def create_dataset(file, out_file, filter_filename=None,amount=None):
+def create_dataset(file, out_file):
     df = pd.read_parquet(file, engine="pyarrow")
 
     # Select relevant columns
@@ -44,19 +44,10 @@ def create_dataset(file, out_file, filter_filename=None,amount=None):
 
     # Add missing columns
     df['task'] = 'iRT'
-
-    if filter_filename:
-        unique_filename_values = df['filename'].unique()[:filter_filename]
-        df = df[df['filename'].isin(unique_filename_values)]
     os.makedirs(os.path.dirname(out_file), exist_ok=True)
-    if amount:
-        df = df.groupby('filename').apply(lambda x: x.sample(frac=amount, random_state=42)).reset_index(drop=True)
-    # Reset the index and drop the old index column
 
     df = df.reset_index(drop=True)
     df.to_csv(out_file, index=True)
-
-
 
 
 
@@ -166,7 +157,7 @@ def get_loss_predictions_file(file):
     mae = median_absolute_error(df['label'], df['predictions'])
     return mae
 
-def get_loss_predictions(dir):
+def get_loss_predictions2(dir):
     losses ={}
     for file in os.listdir(dir):
         filepath = os.path.join(dir, file)  # Full file path

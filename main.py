@@ -1,11 +1,17 @@
 from ctypes import pydll
 
+
 from src.utils_data import *
 import pandas as pd
 
 
 #split_parquet("raw_data/80_tasks.parquet",output_dir="raw_data")
-
+df = pd.read_parquet("raw_data/test_tasks.parquet",engine="pyarrow")
+g = df.groupby(['task_id','dataset']).size()
+print(g)
+print(df["dataset"].unique())
+df2 = pd.read_parquet("raw_data/80_tasks.parquet",engine="pyarrow")
+print(df2["dataset"].unique())
 # create_dataset("raw_data/train_tasks.parquet", "data/trial/all_data.csv",10)
 # split_data("data/trial/all_data.csv",output_dir="data/trial/")
 # select_train_data("data/200_filenames/all_data.csv","data/200_filenames/train.csv",200)

@@ -5,7 +5,6 @@ from tape.models.modeling_utils import SimpleMLP, ValuePredictionHead
 from torch import nn
 from torch.nn.utils import weight_norm
 
-from src.util import resize_token_embeddings
 
 
 class SimpleMLPFix(SimpleMLP):
