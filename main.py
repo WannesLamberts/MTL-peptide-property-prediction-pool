@@ -6,7 +6,7 @@ import pandas as pd
 
 import pandas as pd
 
-df1 = pd.read_parquet("data/high_variety/train_high_variety.parquet")
+df1 = pd.read_parquet("data/high_variety/all.parquet")
 
 lower = df1.head(1000)
 lower.to_parquet("data/small/all.parquet")
