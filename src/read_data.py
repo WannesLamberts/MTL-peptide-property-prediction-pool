@@ -46,11 +46,4 @@ def read_train_val_test_data(args,lookup_df):
         else:
             df_test = None
 
-    p1 = df_train["modified_sequence"].unique()
-    p2 = df_val["modified_sequence"].unique()
-    set1 = set(p1)
-    set2 = set(p2)
-
-    # Find overlap (intersection)
-    overlap = set1 & set2  # or set1.intersection(set2)
     return df_train, df_val, df_test
