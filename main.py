@@ -4,14 +4,51 @@ from ctypes import pydll
 from src.utils_data import *
 import pandas as pd
 
+import pandas as pd
+
+df1 = pd.read_parquet("data/high_variety/train_high_variety.parquet")
+
+lower = df1.head(1000)
+lower.to_parquet("data/small/all.parquet")
+# df2 = pd.read_parquet("data/low_variety/train_low_variety.parquet")
+
+# p1 = df1["modified_sequence"].unique()
+# p2 = df2["modified_sequence"].unique()
+# # Convert to sets
+# set1 = set(p1)
+# set2 = set(p2)
+
+# Find overlap (intersection)
+# overlap = set1 & set2  # or set1.intersection(set2)
+#
+# # See overlap
+# print(overlap)
+# Convert to DataFrame
+# df = pd.read_parquet("data/parquet/train_low_variety.parquet")
+# # Select relevant columns
+# df = df[['sequence', 'iRT', 'filename']]
+#
+# # Rename columns correctly
+# df.columns = ['modified_sequence', 'label', 'filename']
+
+# Add missing columns
+# df['task'] = 'iRT'
+# df_train_practice = df.iloc[:1000]
+# df_val_practice = df.iloc[1001:1100]
+# df_test_practice = df.iloc[1101:1200]
+
+# Save as Parquet
+# df_train_practice.to_parquet("data/parquet/practice_train.parquet", index=False)
+# df_val_practice.to_parquet("data/parquet/practice_val.parquet", index=False)
+# df_test_practice.to_parquet("data/parquet/practice_test.parquet", index=False)
 
 #split_parquet("raw_data/80_tasks.parquet",output_dir="raw_data")
-df = pd.read_parquet("raw_data/test_tasks.parquet",engine="pyarrow")
-g = df.groupby(['task_id','dataset']).size()
-print(g)
-print(df["dataset"].unique())
-df2 = pd.read_parquet("raw_data/80_tasks.parquet",engine="pyarrow")
-print(df2["dataset"].unique())
+# df = pd.read_parquet("raw_data/test_tasks.parquet",engine="pyarrow")
+# g = df.groupby(['task_id','dataset']).size()
+# print(g)
+# print(df["dataset"].unique())
+# df2 = pd.read_parquet("raw_data/80_tasks.parquet",engine="pyarrow")
+# print(df2["dataset"].unique())
 # create_dataset("raw_data/train_tasks.parquet", "data/trial/all_data.csv",10)
 # split_data("data/trial/all_data.csv",output_dir="data/trial/")
 # select_train_data("data/200_filenames/all_data.csv","data/200_filenames/train.csv",200)

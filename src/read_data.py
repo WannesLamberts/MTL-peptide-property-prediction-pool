@@ -34,29 +34,23 @@ def read_train_val_test_data(args,lookup_df):
         )
 
     else:
-        df_train = filter_on_tasks(
-            (
-                pd.read_csv(args.train_file, index_col=0)
-                if args.train_file is not None
-                else None
-            ),
-            args.tasks,
-        )
-        df_val = filter_on_tasks(
-            (
-                pd.read_csv(args.val_file, index_col=0)
-                if args.val_file is not None
-                else None
-            ),
-            args.tasks,
-        )
-        df_test = filter_on_tasks(
-            (
-                pd.read_csv(args.val_file, index_col=0)
-                if args.test_file is not None
-                else None
-            ),
-            args.tasks,
-        )
+        df_train = pd.read_parquet(args.train_file) if args.train_file is not None else None
+        df_train = pd.merge(df_train, lookup_df, on='filename',
+                               how='left')  # You can adjust 'how' to 'left', 'right', or 'outer' based on your need
+        df_val = pd.read_parquet(args.val_file) if args.val_file is not None else None
+        df_val = pd.merge(df_val, lookup_df, on='filename',
+                               how='left')  # You can adjust 'how' to 'left', 'right', or 'outer' based on your need
+        if args.test_file is not None:
+            df_test = pd.read_parquet(args.test_file)
+            df_test = pd.merge(df_test, lookup_df, on='filename', how='left')
+        else:
+            df_test = None
 
+    p1 = df_train["modified_sequence"].unique()
+    p2 = df_val["modified_sequence"].unique()
+    set1 = set(p1)
+    set2 = set(p2)
+
+    # Find overlap (intersection)
+    overlap = set1 & set2  # or set1.intersection(set2)
     return df_train, df_val, df_test

@@ -123,10 +123,13 @@ if __name__ == "__main__":
         "--run", type=str, required=True, help="Path to the model run (e.g., best_run directory)"
     )
     parser.add_argument(
-        "--all_data_file", type=str, required=True, help="Path to the all data CSV file"
+        "--train", type=str, required=True, help="Path to the all data CSV file"
     )
     parser.add_argument(
-        "--predict_i", type=str, required=True, help="Path to the prediction index file"
+        "--val", type=str, required=True, help="Path to the all data CSV file"
+    )
+    parser.add_argument(
+        "--test", type=str, required=True, help="Path to the all data CSV file"
     )
     parser.add_argument(
         "--out_file", type=str, required=True, help="Path to the prediction index file"
@@ -134,10 +137,14 @@ if __name__ == "__main__":
 
     # Parse the arguments
     args = parser.parse_args()
-    predict_df = pd.read_csv(args.all_data_file, index_col=0)
-    predict_df = apply_index_file(predict_df, args.predict_i)
+    predict_df = pd.read_parquet(args.train)
+    val_df = pd.read_parquet(args.val)
+    test_df = pd.read_parquet(args.test)
+
+    combined_df = pd.concat([predict_df, val_df, test_df], ignore_index=True)
+
     result=get_mean_pools(
-        predict_df,
+        combined_df,
         args.run
     )
     result.to_parquet(args.out_file, engine='pyarrow')

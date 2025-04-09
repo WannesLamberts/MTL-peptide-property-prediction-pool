@@ -106,7 +106,7 @@ def check_data_files(args):
             )
         return True
 
-    elif all(f is None for f in (args.train_i, args.val_i, args.test_i)):
+    elif all(f is None for f in (args.train_file, args.val_file, args.test_file)):
         raise argparse.ArgumentError(
             argument=None,
             message=f"Ambiguous data arguments: no --data-file, --train-file, "

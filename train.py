@@ -61,8 +61,9 @@ def train(args):
     print("Reading train and validation data")
     lookup_df = pd.read_parquet(args.lookup, engine='pyarrow')
 
-
     args.df_train, args.df_val, args.df_test = read_train_val_test_data(args,lookup_df)
+    # args.df_train = pd.read_parquet(args.train_i)
+    # args.df_val= pd.read_parquet(args.val_i)
 
     print("Creating or loading the vocab")
     args.vocab = get_vocab(args)
@@ -92,7 +93,7 @@ def train(args):
     lit_model = create_model(args)
 
     trainer = pl.Trainer(
-        max_epochs=-1,
+        max_epochs=2,
         min_epochs=15,
         accelerator="gpu",
         devices=args.gpus,

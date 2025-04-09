@@ -35,7 +35,6 @@ def create_csv(file):
 
 def create_dataset(file, out_file):
     df = pd.read_parquet(file, engine="pyarrow")
-
     # Select relevant columns
     df = df[['sequence', 'iRT', 'filename']]
 
@@ -47,7 +46,7 @@ def create_dataset(file, out_file):
     os.makedirs(os.path.dirname(out_file), exist_ok=True)
 
     df = df.reset_index(drop=True)
-    df.to_csv(out_file, index=True)
+    df.to_parquet(out_file, index=True)
 
 
 
