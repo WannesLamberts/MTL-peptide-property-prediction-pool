@@ -93,7 +93,7 @@ def train(args):
     lit_model = create_model(args)
 
     trainer = pl.Trainer(
-        max_epochs=2,
+        max_epochs=-1,
         min_epochs=15,
         accelerator="gpu",
         devices=args.gpus,
