@@ -1,13 +1,12 @@
 #!/bin/bash
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=1
 #SBATCH -A ap_adrem_wb_thesis2425
 #SBATCH --time=02:00:00
 #SBATCH --partition=ampere_gpu
 #SBATCH --gres=gpu:1
 
-DATASET=$1
-FILENAMES=$2
+NAME=$1
+DIR=$2
 
 
 # Run the container
@@ -17,6 +16,6 @@ apptainer shell --bind ${VSC_SCRATCH}/model/MTL-peptide-property-prediction-base
 cd /app
 
 # Run the Python script
-python train.py --config "base_${DATASET}" -p own --checkpoint-id 0 -c --data-file "data/$DATASET/all_data.csv" --train-i "data/$DATASET/train.csv" --val-i "data/$DATASET/val.csv" --hpt-config "hpt/mtl_hpt_finetune_own.csv" --hpt-id 27 --vocab-file "data/$DATASET/vocab.p" -t "iRT"
+python train.py --config $NAME -p own --checkpoint-id 0 -c --train-file "data/$DIR/all.parquet" --val-file "data/val.parquet" --test-file "data/test.parquet" --hpt-config "hpt/mtl_hpt_finetune_own.csv" --hpt-id 27 --vocab-file "data/vocab.p" -t "iRT"
 
 EOF
