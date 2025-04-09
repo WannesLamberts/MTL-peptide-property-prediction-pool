@@ -95,7 +95,7 @@ def get_mean_pools(df,run):
     index_list = []
 
     for batch_tensor, batch_indices in pred:
-        batch_list.append(batch_tensor.numpy())  # Convert batch tensor to NumPy array
+        batch_list.append(batch_tensor.numpy().copy())  # Convert batch tensor to NumPy array
         index_list.append(batch_indices)
 
     # Stack all batches at once
