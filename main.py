@@ -8,8 +8,8 @@ import pandas as pd
 
 df1 = pd.read_parquet("data/high_variety/all.parquet")
 
-lower = df1.head(1000)
-lower.to_parquet("data/small/all.parquet")
+lower = df1.head(1)
+lower.to_parquet("data/small/one.parquet")
 # df2 = pd.read_parquet("data/low_variety/train_low_variety.parquet")
 
 # p1 = df1["modified_sequence"].unique()

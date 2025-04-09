@@ -43,7 +43,7 @@ class MTLPepDataset(Dataset):
             "indx": self.df.index[item],
         }
         if self.args.mode == "supervised":
-            dict["features"]=self.df.features.iloc[item]
+            dict["features"]=torch.tensor(self.df.features.iloc[item])
         return dict
 
 import numpy as np
