@@ -5,8 +5,9 @@ import seaborn as sns
 
 def plot_bar_horizontal(data_series,title="Sequences by dataset for split",
                         xlabel="Count of Sequences", ylabel="Dataset",
-                        figsize=(10, 6)):
-    data_series = data_series.sort_values(ascending=False)
+                        figsize=(10, 6),sort=True):
+    if sort:
+        data_series = data_series.sort_values(ascending=False)
 
     plt.figure(figsize=figsize)
     ax = sns.barplot(
@@ -30,8 +31,9 @@ def plot_bar_horizontal(data_series,title="Sequences by dataset for split",
     plt.grid(axis='x', linestyle='--', alpha=0.7)
     plt.tight_layout()
 
-def plot_bar_vertical(data_series,title,xlabel,ylabel,figsize=(10, 6)):
-    data_series = data_series.sort_values(ascending=False)
+def plot_bar_vertical(data_series,title,xlabel,ylabel,figsize=(10, 6),sort=True):
+    if sort:
+        data_series = data_series.sort_values(ascending=False)
     plt.figure(figsize=figsize)
     colors = sns.color_palette("colorblind", len(data_series))  # You can use other palettes too
     ax = sns.barplot(
