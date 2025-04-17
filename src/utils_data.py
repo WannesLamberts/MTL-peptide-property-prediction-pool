@@ -31,43 +31,40 @@ def get_loss_predictions2(dir):
         losses[file] = get_loss_predictions_file(filepath)
     return losses
 
-
+import numpy as np
 def cross_validate(all_data, n_splits=5, output_dir="", random_state=42):
-    """
-    Perform group-based k-fold cross-validation and save fold indices.
+    df = pd.read_parquet(all_data, engine="pyarrow")
+    # Params
+    n_val_groups = 1
+    n_test_groups = 1
+    random_state = 42
 
-    Parameters:
-        all_data (str): Path to the CSV file containing the data
-        n_splits (int): Number of folds for cross-validation
-        output_dir (str): Directory to save the split indices
-        random_state (int): Random seed for reproducibility
-    """
-    # Make sure output_dir ends with a slash if it's not empty
-    if output_dir and not output_dir.endswith('/'):
-        output_dir += '/'
+    # Shuffle groups
+    groups = df["sequence"].unique()
+    groups = np.random.RandomState(seed=random_state).permutation(groups)
 
-    # Read data
-    df = pd.read_csv(all_data, index_col=0)
-    df.index.to_series().to_csv(output_dir + "encoding_indices.csv", index=False, header=False)
+    # Total number of groups per fold
+    groups_per_fold = n_val_groups + n_test_groups
+    n_folds = len(groups) // groups_per_fold
 
-    # Initialize the GroupKFold cross-validator
-    group_kfold = GroupKFold(n_splits=n_splits)
+    # Cross-validation loop
+    for fold in range(n_folds):
+        fold_start = fold * groups_per_fold
+        fold_end = fold_start + groups_per_fold
 
-    # Generate and save the fold indices
-    for fold, (train_idx, val_idx) in enumerate(group_kfold.split(
-            X=df.drop(columns="label"),
-            y=df["label"],
-            groups=df["filename"]
-    )):
-        # Save train and validation indices for this fold
-        pd.DataFrame(train_idx, columns=['Index']).to_csv(
-            output_dir + f"train_fold_{fold}.csv", index=False, header=False)
-        pd.DataFrame(val_idx, columns=['Index']).to_csv(
-            output_dir + f"val_fold_{fold}.csv", index=False, header=False)
+        val_groups = groups[fold_start: fold_start + n_val_groups]
+        test_groups = groups[fold_start + n_val_groups: fold_end]
+        train_groups = np.setdiff1d(groups, np.concatenate([val_groups, test_groups]))
 
-    # Return information about the cross-validation setup
-    return {
-        'n_splits': n_splits,
-        'total_samples': len(df),
-        'samples_per_fold': len(df) // n_splits
-    }
+        train_idx = df[df["sequence"].isin(train_groups)].index
+        val_idx = df[df["sequence"].isin(val_groups)].index
+        test_idx = df[df["sequence"].isin(test_groups)].index
+
+        print(f"Fold {fold + 1}:")
+        print(f"  Train groups: {train_groups}")
+        print(f"  Val groups: {val_groups}")
+        print(f"  Test groups: {test_groups}")
+        print(f"  Train samples: {len(train_idx)}, Val samples: {len(val_idx)}, Test samples: {len(test_idx)}")
+
+if __name__ == "__main__":
+    cross_validate("../raw_data/80_tasks.parquet")
