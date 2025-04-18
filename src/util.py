@@ -89,29 +89,8 @@ def check_checkpoint_path(d):
 
 def check_data_files(args):
     if args.data_file is not None:
-        if any(
-            f is not None
-            for f in (args.train_file, args.val_file, args.test_file)
-        ):
-            raise argparse.ArgumentError(
-                argument=None,
-                message=f"Ambiguous data arguments: both --data-file and "
-                f"--train-file, --val-file, or --test-file given",
-            )
-        if all(f is None for f in (args.train_i, args.val_i, args.test_i)):
-            raise argparse.ArgumentError(
-                argument=None,
-                message=f"Ambiguous data arguments: --data-file given but no "
-                f"train, val or test index file",
-            )
         return True
 
-    elif all(f is None for f in (args.train_file, args.val_file, args.test_file)):
-        raise argparse.ArgumentError(
-            argument=None,
-            message=f"Ambiguous data arguments: no --data-file, --train-file, "
-            f"--val-file, or --test-file given",
-        )
     return False
 
 

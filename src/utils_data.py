@@ -6,10 +6,10 @@ from sklearn.metrics import median_absolute_error,median_absolute_error
 def create_dataset(file, out_file):
     df = pd.read_parquet(file, engine="pyarrow")
     # Select relevant columns
-    df = df[['sequence', 'iRT', 'filename']]
+    df = df[['sequence', 'iRT', 'filename','dataset']]
 
     # Rename columns correctly
-    df.columns = ['modified_sequence', 'label', 'filename']
+    df.columns = ['modified_sequence', 'label', 'filename', 'dataset']
 
     # Add missing columns
     df['task'] = 'iRT'
@@ -18,6 +18,32 @@ def create_dataset(file, out_file):
     df = df.reset_index(drop=True)
     df.to_parquet(out_file, index=True)
 
+def create_dataset_df(df, out_file):
+    # Select relevant columns
+    df = df[['sequence', 'iRT', 'filename','dataset']].copy()
+
+    # Rename columns correctly
+    df.columns = ['modified_sequence', 'label', 'filename', 'dataset']
+
+    # Add missing columns
+    df['task'] = 'iRT'
+    os.makedirs(os.path.dirname(out_file), exist_ok=True)
+
+    df = df.reset_index(drop=True)
+    df.to_parquet(out_file, index=True)
+
+
+def create_dataset_encoding(df):
+
+    # Select relevant columns
+    df = df[['sequence', 'iRT']]
+
+    # Rename columns correctly
+    df.columns = ['modified_sequence', 'label']
+
+    df['Charge'] = ''  # Empty values
+    df['DCCS_sequence'] = ''  # Empty values
+    return df
 
 def get_loss_predictions_file(file):
     df = pd.read_csv(file, index_col=0)

@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 
 from src.dataset import MTLPepDataset, custom_collate
 from src.model_util import EarlyStoppingLate, create_model
-from src.read_data import read_train_val_test_data
+from src.read_data import read_train_val_test
 from src.util import (
     check_checkpoint_path,
     split_run_config,
@@ -61,7 +61,7 @@ def train(args):
     print("Reading train and validation data")
     lookup_df = pd.read_parquet(args.lookup, engine='pyarrow')
 
-    args.df_train, args.df_val, args.df_test = read_train_val_test_data(args,lookup_df)
+    args.df_train, args.df_val, args.df_test = read_train_val_test(args,lookup_df)
     # args.df_train = pd.read_parquet(args.train_i)
     # args.df_val= pd.read_parquet(args.val_i)
 
