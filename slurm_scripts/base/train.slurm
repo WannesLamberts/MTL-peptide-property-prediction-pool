@@ -3,7 +3,7 @@
 #SBATCH -A ap_adrem_wb_thesis2425
 #SBATCH --time=02:00:00
 #SBATCH --partition=ampere_gpu
-#SBATCH --gres=gpu:1
+#SBATCH --gpus-per-node=1
 
 NAME=$1
 TRAIN=$2
