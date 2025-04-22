@@ -52,6 +52,7 @@ class LitMTL(pl.LightningModule):
 
     def predict_step(self, batch, batch_idx):
         (t_out,) = self.model(batch["token_ids"])
+        print("test")
         return t_out,batch["indx"]
 
     def validation_step(self, batch, batch_idx):

@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 
 from src.dataset import MTLPepDataset, custom_collate
 from src.lit_model import LitMTL
-from src.read_data import apply_index_file
+from src.read_data import apply_index_file, read_train_val_test_data
 from src.utils_data import create_dataset_encoding
 from src.util import (
     DEFAULT_CONFIG,
@@ -123,13 +123,16 @@ if __name__ == "__main__":
         "--run", type=str, required=True, help="Path to the model run (e.g., best_run directory)"
     )
     parser.add_argument(
-        "--train", type=str, required=True, help="Path to the all data CSV file"
+        "--data-file", type=str, required=True, help="Path to the all data CSV file"
     )
     parser.add_argument(
-        "--val", type=str, required=True, help="Path to the all data CSV file"
+        "--train-i", type=str, required=True, help="Path to the all data CSV file"
     )
     parser.add_argument(
-        "--test", type=str, required=True, help="Path to the all data CSV file"
+        "--val-i", type=str, required=True, help="Path to the all data CSV file"
+    )
+    parser.add_argument(
+        "--test-i", type=str, required=True, help="Path to the all data CSV file"
     )
     parser.add_argument(
         "--out_file", type=str, required=True, help="Path to the prediction index file"
@@ -137,11 +140,11 @@ if __name__ == "__main__":
 
     # Parse the arguments
     args = parser.parse_args()
-    predict_df = pd.read_parquet(args.train)
-    val_df = pd.read_parquet(args.val)
-    test_df = pd.read_parquet(args.test)
-
-    combined_df = pd.concat([predict_df, val_df, test_df], ignore_index=True)
+    data_file = pd.read_parquet(args.data_file)
+    train = apply_index_file(data_file,args.train_i)
+    val = apply_index_file(data_file,args.val_i)
+    test = apply_index_file(data_file,args.test_i)
+    combined_df = pd.concat([train, val, test], ignore_index=True)
 
     result=get_mean_pools(
         combined_df,

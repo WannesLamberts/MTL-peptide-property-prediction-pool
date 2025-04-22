@@ -6,14 +6,8 @@ import pandas as pd
 
 import pandas as pd
 
-df_test = pd.read_parquet("data/test.parquet")
-df_val = pd.read_parquet("data/val.parquet")
-
-df_test = df_test.head(50)
-df_val = df_val.head(50)
-
-df_test.to_parquet("data/testing/test_small.parquet")
-df_val.to_parquet("data/testing/val_small.parquet")
+df_train = pd.read_parquet("data/dataset.parquet")
+print(df_train.index)
 
 # df2 = pd.read_parquet("data/low_variety/train_low_variety.parquet")
 

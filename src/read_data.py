@@ -29,11 +29,9 @@ def read_train_val_test_data(args,lookup_df):
     :return:
     """
     if args.use_1_data_file:
-        all_data = pd.read_csv(args.data_file, index_col=0)
-        original_index = all_data.index
+        all_data = pd.read_parquet(args.data_file)
         all_data = pd.merge(all_data, lookup_df, on='filename',
                                how='left')  # You can adjust 'how' to 'left', 'right', or 'outer' based on your need
-        all_data.index = original_index
         df_train = (
             apply_index_file(all_data, args.train_i)
             if args.train_i is not None
