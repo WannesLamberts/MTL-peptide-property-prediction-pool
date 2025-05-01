@@ -82,8 +82,57 @@ def scrape_dataset(url, directory_path, max=None, workers=5):
 
     return
 
+
+def process_file(filename, directory, chronologer, calibrate=False, remove=False):
+    if filename.endswith("evidence.txt"):
+        pool = int(re.search("Pool_(\\d+)", filename, re.IGNORECASE).group(0).capitalize().replace("Pool_",""))
+        # Read CSV file
+        df = pd.read_csv(os.path.join(directory, filename), sep='\t')
+        df['pool'] = pool
+        df = preprocess_dataframe(df)
+        df['file'] = filename
+
+        if remove:
+            os.remove(os.path.join(directory, filename))
+        if calibrate:
+            # calibrates the retention times
+            df = calibrate_to_iRT(df, chronologer)
+            # Check if calibration worked correctly
+            if df is None:
+                print(f"Not enough calibration peptides found in {filename}")
+                return None
+        print("processing done: "+filename)
+        return df
+    return None
+
+
+def process_files_parallel(directory, chronologer='../raw_data/Chronologer.tsv', calibrate=True, remove=False, max_workers=10):
+    chronologer = pd.read_csv(chronologer, sep='\t')
+    evidence_files = [f for f in os.listdir(directory) if f.endswith("evidence.txt")]
+    results = []
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        # Submit all tasks and collect futures
+        futures = [executor.submit(process_file, filename, directory, chronologer, calibrate, remove)
+                   for filename in evidence_files]
+
+        # Get results from completed futures
+        for future in futures:
+            df = future.result()
+            if df is not None:
+                results.append(df)
+
+    # Combine results
+    if results:
+        result = pd.concat(results, ignore_index=True)
+        result.to_parquet(os.path.join(directory, "merged_evidenceC.parquet"), index=False)
+        return result
+    else:
+        print("No valid dataframes to concatenate")
+        return None
 def merge_and_clean(directory,remove=True,calibrate=True):
     dfs=[]
+    chronologer = pd.read_csv('../raw_data/Chronologer.tsv', sep='\t')
     for filename in os.listdir(directory):
         if filename.endswith("evidence.txt"):
             pool = int(re.search("Pool_(\\d+)", filename, re.IGNORECASE).group(0).capitalize().replace("Pool_",""))
@@ -91,19 +140,20 @@ def merge_and_clean(directory,remove=True,calibrate=True):
             df = pd.read_csv(os.path.join(directory, filename),sep='\t')
             df['pool'] = pool
             df = preprocess_dataframe(df)
+            df['file']= filename
+
             if remove:
                 os.remove(os.path.join(directory, filename))
             if calibrate:
                 # calibrates the retention times
-                df = calibrate_to_iRT(df)
+                df = calibrate_to_iRT(df,chronologer)
                 # Check if calibration worked correctly
                 if df is None:
                     print(f"Not enough calibration peptides found in {filename}")
                     continue
             dfs.append(df)
     result = pd.concat(dfs, ignore_index=True)
-    result = result.rename(columns={"Modified sequence": "sequence"})
-    result.to_parquet(os.path.join(directory, "merged_evidence.parquet"), index=False)
+    result.to_parquet(os.path.join(directory, "merged_evidenceC.parquet"), index=False)
 
 
 
@@ -146,12 +196,12 @@ def get_calibration_peptides(df, calibration_df=None):
             "GASDFLSFAVK": 112.37148254946804,
         }
     else:
-        overlap = df.merge(calibration_df, how="inner", on="Modified sequence")
+        overlap = df.merge(calibration_df, how="inner", left_on="modified_sequence", right_on="PeptideModSeq")
         return {
-            k: v for k, v in zip(overlap["Modified sequence"], overlap["iRT"])
+            k: v for k, v in zip(overlap["PeptideModSeq"], overlap["Prosit_RT"])
         }
 
-def calibrate_to_iRT(df,calibration_df=None,seq_col="Modified sequence",rt_col="Retention time",
+def calibrate_to_iRT(df,calibration_df=None,seq_col="modified_sequence",rt_col="Retention time",
     irt_col="iRT",plot=False,filename=None,take_median=False,):
     """
     Calibrates the retention times in a DataFrame to indexed Retention Time (iRT) values using a set of calibration peptides.
@@ -277,21 +327,22 @@ def preprocess_dataframe(df,format_modified_sequence = True,min_score = 90, max_
     pandas.DataFrame
         The preprocessed DataFrame
     """
+    df = df.rename(columns={"Modified sequence": "modified_sequence"})
 
     # format the 'Modified sequence' by removing the first and last character
     if format_modified_sequence:
-        df["Modified sequence"] = df["Modified sequence"].str[1:-1]
+        df["modified_sequence"] = df["modified_sequence"].str[1:-1]
 
     # Filter rows based on the 'Score' and 'PEP' columns
     df = df[df["Score"]>=min_score]
     df = df[df["PEP"]<=max_PEP]
 
     df = df.reset_index(drop=True)
-    df = df[["Modified sequence","Retention time","pool"]]
+    df = df[["modified_sequence","Retention time","pool"]]
 
 
     return df
 if __name__ == "__main__":
     LINK_DATASET = "https://ftp.pride.ebi.ac.uk/pride/data/archive/2017/02/PXD004732/"
     #scrape_dataset(LINK_DATASET,"../data/proteome_tools/")
-    merge_and_clean("../data/proteome_tools",False,True)
+    process_files_parallel("../data/proteome_tools")

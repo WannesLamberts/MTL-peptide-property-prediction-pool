@@ -1,5 +1,4 @@
 import pandas as pd
-from sklearn.model_selection import train_test_split, GroupShuffleSplit, GroupKFold
 import os
 from sklearn.metrics import median_absolute_error,median_absolute_error
 
@@ -20,10 +19,10 @@ def create_dataset(file, out_file):
 
 def create_dataset_df(df, out_file):
     # Select relevant columns
-    df = df[['sequence', 'iRT', 'filename','dataset']].copy()
+    df = df[['sequence', 'iRT', 'filename','dataset','task_id']].copy()
 
     # Rename columns correctly
-    df.columns = ['modified_sequence', 'label', 'filename', 'dataset']
+    df.columns = ['modified_sequence', 'label', 'filename', 'dataset','task_id']
 
     # Add missing columns
     df['task'] = 'iRT'

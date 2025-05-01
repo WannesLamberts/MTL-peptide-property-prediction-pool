@@ -6,8 +6,13 @@ import pandas as pd
 
 import pandas as pd
 
-df_train = pd.read_parquet("data/dataset.parquet")
-print(df_train.index)
+df_1 = pd.read_parquet("raw_data/80_tasks.parquet")
+df_2 = pd.read_parquet("raw_data/76_tasks.parquet")
+# Concatenate the DataFrames
+df_combined = pd.concat([df_1, df_2], ignore_index=True)
+
+# Write to a new Parquet file
+df_combined.to_parquet("raw_data/combined_tasks.parquet", index=False)
 
 # df2 = pd.read_parquet("data/low_variety/train_low_variety.parquet")
 
