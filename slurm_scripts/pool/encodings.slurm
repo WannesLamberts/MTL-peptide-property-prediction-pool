@@ -4,7 +4,7 @@
 #SBATCH --time=02:00:00
 #SBATCH --partition=ampere_gpu
 #SBATCH --gpus-per-node=1
-
+#SBATCH -o pool_encodings.out
 # Run the container
 apptainer shell --bind ${VSC_SCRATCH}/model/MTL-peptide-property-prediction-pool:/app --bind ${VSC_SCRATCH}/model/data:/app/data --bind ${VSC_SCRATCH}/model/lightning_logs:/app/lightning_logs --nv ${VSC_SCRATCH}/model/environment/environment.sif<<EOF
 

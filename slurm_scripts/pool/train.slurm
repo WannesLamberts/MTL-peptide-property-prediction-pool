@@ -4,6 +4,7 @@
 #SBATCH --time=02:00:00
 #SBATCH --partition=ampere_gpu
 #SBATCH --gpus-per-node=1
+#SBATCH -o pool_train.out
 
 NAME=$1
 TRAIN=$2
