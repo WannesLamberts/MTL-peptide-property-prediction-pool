@@ -16,5 +16,5 @@ apptainer shell --bind ${VSC_SCRATCH}/model/MTL-peptide-property-prediction-pool
 cd /app
 
 # Run the Python script
-python train.py --config $NAME -p own --checkpoint-id 0 -c --data-file "data/dataset.parquet" --train-i "data/$TRAIN" --val-i "data/val.csv" --test-i "data/test.csv" --hpt-config "hpt/mtl_hpt_finetune_own.csv" --hpt-id 27 --vocab-file "data/vocab.p" --lookup "data/lookup.parquet"
+python train.py --config $NAME -p own --checkpoint-id 0 -c --data-file "data/dataset.parquet" --train-i "data/$TRAIN" --val-i "data/val.csv" --test-i "data/test.csv" --hpt-config "hpt/mtl_hpt_finetune_own.csv" --hpt-id 27 --vocab-file "data/vocab.p" --lookup "data/lookup.parquet" --bs 2048
 EOF
