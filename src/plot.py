@@ -92,7 +92,7 @@ def vertical_boxplot(data_series, ylabel, title, figsize=(6, 8)):
     plt.show()
 
 
-def horizontal_boxplot(data_series, xlabel, title, figsize=(8, 6)):
+def horizontal_boxplot(data_series, xlabel, title, figsize=(8, 6),show_fliers=False):
     """
     Generate a horizontal boxplot for a given pandas Series.
 
@@ -110,7 +110,7 @@ def horizontal_boxplot(data_series, xlabel, title, figsize=(8, 6)):
         x=data_series.values,  # Changed from y to x
         color="lightblue",
         linewidth=1.5,
-        fliersize=5
+        showfliers=show_fliers
     )
 
     # Customize labels and title
@@ -164,51 +164,59 @@ import seaborn as sns
 
 def create_MAD_comparison_violinplot(data_series, labels,
                                      title='Comparison of MAD values across different groupings',
-                                     xlabel='Grouping Method', ylabel='MAD',
+                                     xlabel='MAD', ylabel='Grouping Method',
                                      bw=0.2, percentile_cutoff=0.95):
     # Build the combined DataFrame
     df_list = []
     for data, label in zip(data_series, labels):
         df_list.append(pd.DataFrame({
-            ylabel: data.values if hasattr(data, 'values') else data,
+            'MAD': data.values if hasattr(data, 'values') else data,
             'Group': label
         }))
 
     df_violin = pd.concat(df_list, ignore_index=True)
 
     # Calculate cutoff (e.g., 95th percentile)
-    cutoff = df_violin[ylabel].quantile(percentile_cutoff)
+    cutoff = df_violin['MAD'].quantile(percentile_cutoff)
 
     # Create figure and axis
     fig, ax = plt.subplots(figsize=(10, 6))
 
-    # Create violin plot
-    sns.violinplot(x='Group', y=ylabel, data=df_violin, cut=0, ax=ax,
-                   inner='box', linewidth=1, bw=bw)
+    # Create horizontal violin plot with a vibrant color
+    sns.violinplot(x='MAD', y='Group', data=df_violin, cut=0, ax=ax,
+                   inner='box', linewidth=1, bw=bw, color='#4C78A8')  # Deep blue color
 
-    # Set y-axis limits
-    ax.set_ylim(-1, cutoff)
+    # Set x-axis limits (for MAD values)
+    ax.set_xlim(-0.1, cutoff)
 
-    # Annotate the cutoff line
-    ax.axhline(y=cutoff, color='red', linestyle='--', alpha=0.7, linewidth=0.8)
-    ax.text(0.02, cutoff * 0.95, f"Cutoff at {cutoff:.2f} ({int(percentile_cutoff * 100)}th percentile)",
-            ha='left', va='top', transform=ax.get_yaxis_transform(),
+    # Annotate the cutoff line (vertical now)
+    ax.axvline(x=cutoff, color='red', linestyle='--', alpha=0.7, linewidth=0.8)
+    ax.text(cutoff * 0.95, 0.02, f"Cutoff at {cutoff:.2f} ({int(percentile_cutoff * 100)}th percentile)",
+            ha='right', va='bottom', transform=ax.get_xaxis_transform(),
             bbox=dict(facecolor='white', alpha=0.7, boxstyle='round,pad=0.5'))
 
-    # Annotate max values above cutoff
+    # Annotate max values beyond cutoff
     unique_groups = df_violin['Group'].unique()
     for i, group in enumerate(unique_groups):
-        group_max = df_violin[df_violin['Group'] == group][ylabel].max()
+        group_max = df_violin[df_violin['Group'] == group]['MAD'].max()
         if group_max > cutoff:
             ax.annotate(f"Max: {group_max:.2f}",
-                        xy=(i, cutoff), xytext=(i, cutoff * 0.85),
-                        ha='center', va='top',
+                        xy=(cutoff, i), xytext=(cutoff * 0.85, i),
+                        ha='right', va='center',
                         arrowprops=dict(arrowstyle='->', color='black', lw=0.8))
+
+    # Add centered median annotations slightly below the line
+    for i, group in enumerate(unique_groups):
+        group_median = df_violin[df_violin['Group'] == group]['MAD'].median()
+        ax.annotate(f"Median: {group_median:.2f}",
+                    xy=(group_median, i), xytext=(group_median, i - 0.15),  # Shift down by 0.15
+                    ha='center', va='top',
+                    bbox=dict(facecolor='white', alpha=0.7, boxstyle='round,pad=0.3'))
 
     # Set plot titles and labels
     ax.set_title(title)
-    ax.set_ylabel(ylabel)
     ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
 
     plt.tight_layout()
     plt.show()
