@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import numpy as np
 
 
 def plot_bar_horizontal(data_series,title="Sequences by dataset for split",
@@ -220,3 +221,68 @@ def create_MAD_comparison_violinplot(data_series, labels,
 
     plt.tight_layout()
     plt.show()
+
+
+def plot_wasserstein_comparison(wasserstein_dict1, wasserstein_dict2,
+                                label1="Dataset 1", label2="Dataset 2",
+                                xlim=(0, 20), figsize=(10, 6)):
+    """
+    Create KDE plot comparing two sets of Wasserstein distances.
+
+    Args:
+        wasserstein_dict1: First dictionary of Wasserstein distances
+        wasserstein_dict2: Second dictionary of Wasserstein distances
+        label1: Label for the first dataset
+        label2: Label for the second dataset
+        xlim: x-axis limits as tuple (min, max)
+        figsize: Figure size as tuple (width, height)
+    """
+    # Extract values
+    x_values1 = np.array(list(wasserstein_dict1.values()))
+    x_values2 = np.array(list(wasserstein_dict2.values()))
+
+    # Create KDE plot
+    plt.figure(figsize=figsize)
+
+    # Plot both distributions
+    sns.kdeplot(x_values1, fill=True, alpha=0.5, color="skyblue", label=label1)
+    sns.kdeplot(x_values2, fill=True, alpha=0.5, color="orange", label=label2)
+
+    # Add vertical lines for medians
+    mean1 = np.mean(x_values1)
+    mean2 = np.mean(x_values2)
+    median1 = np.median(x_values1)
+    median2 = np.median(x_values2)
+
+    plt.axvline(median1, color='blue', linestyle='--',
+                label=f"{label1} Median: {median1:.2f}")
+    plt.axvline(median2, color='red', linestyle='--',
+                label=f"{label2} Median: {median2:.2f}")
+
+    # Set plot limits and labels
+    plt.xlim(xlim)
+    plt.xlabel("Wasserstein Distance")
+    plt.ylabel("Density")
+    plt.title("Comparison of Wasserstein Distances")
+    plt.legend()
+
+    # Show statistics
+    print(f"Statistics for {label1}:")
+    print(f"  Mean: {mean1:.2f}")
+    print(f"  Median: {median1:.2f}")
+    print(f"  Min: {np.min(x_values1):.2f}")
+    print(f"  Max: {np.max(x_values1):.2f}")
+    print(f"  Count: {len(x_values1)}")
+
+    print(f"\nStatistics for {label2}:")
+    print(f"  Mean: {mean2:.2f}")
+    print(f"  Median: {median2:.2f}")
+    print(f"  Min: {np.min(x_values2):.2f}")
+    print(f"  Max: {np.max(x_values2):.2f}")
+    print(f"  Count: {len(x_values2)}")
+
+    # Show the plot
+    plt.tight_layout()
+    plt.show()
+
+    return plt
