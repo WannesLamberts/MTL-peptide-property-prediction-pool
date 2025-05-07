@@ -86,7 +86,7 @@ def scrape_dataset(url, directory_path, max=None, workers=5):
 def process_file(filename, directory, chronologer, calibrate=False, remove=False):
     if filename.endswith("evidence.txt"):
         pool = int(re.search("Pool_(\\d+)", filename, re.IGNORECASE).group(0).capitalize().replace("Pool_",""))
-        # Read CSV file
+        # Read CSV fileget
         df = pd.read_csv(os.path.join(directory, filename), sep='\t')
         df['pool'] = pool
         df = preprocess_dataframe(df)
