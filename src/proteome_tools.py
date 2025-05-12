@@ -106,7 +106,7 @@ def process_file(filename, directory, chronologer, calibrate=False, remove=False
     return None
 
 
-def process_files_parallel(directory, chronologer='../raw_data/Chronologer.tsv', calibrate=True, remove=False, max_workers=10):
+def process_files_parallel(directory, chronologer='../raw_data/Chronologer.tsv',output="proteome_tools.parquet", calibrate=True, remove=False, max_workers=10):
     chronologer = pd.read_csv(chronologer, sep='\t')
     evidence_files = [f for f in os.listdir(directory) if f.endswith("evidence.txt")]
     results = []
@@ -125,35 +125,11 @@ def process_files_parallel(directory, chronologer='../raw_data/Chronologer.tsv',
     # Combine results
     if results:
         result = pd.concat(results, ignore_index=True)
-        result.to_parquet(os.path.join(directory, "merged_evidenceC.parquet"), index=False)
+        result.to_parquet(os.path.join(output), index=False)
         return result
     else:
         print("No valid dataframes to concatenate")
         return None
-def merge_and_clean(directory,remove=True,calibrate=True):
-    dfs=[]
-    chronologer = pd.read_csv('../raw_data/Chronologer.tsv', sep='\t')
-    for filename in os.listdir(directory):
-        if filename.endswith("evidence.txt"):
-            pool = int(re.search("Pool_(\\d+)", filename, re.IGNORECASE).group(0).capitalize().replace("Pool_",""))
-            # Read CSV file
-            df = pd.read_csv(os.path.join(directory, filename),sep='\t')
-            df['pool'] = pool
-            df = preprocess_dataframe(df)
-            df['file']= filename
-
-            if remove:
-                os.remove(os.path.join(directory, filename))
-            if calibrate:
-                # calibrates the retention times
-                df = calibrate_to_iRT(df,chronologer)
-                # Check if calibration worked correctly
-                if df is None:
-                    print(f"Not enough calibration peptides found in {filename}")
-                    continue
-            dfs.append(df)
-    result = pd.concat(dfs, ignore_index=True)
-    result.to_parquet(os.path.join(directory, "merged_evidenceC.parquet"), index=False)
 
 
 
