@@ -18,6 +18,7 @@ dependencies:
     - seaborn=0.12.2
     - pip=23.0.1
     - pyarrow=19.0.0
+    - optuna=4.3.0
     -   pip:
             - tape_proteins==0.5
             - tensorflow==2.11.0
