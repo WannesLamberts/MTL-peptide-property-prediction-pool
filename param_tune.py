@@ -29,7 +29,7 @@ def objective(trial,args):
                 'activation': trial.suggest_categorical("activation",['relu','tanh','sigmoid'])
                 }
     }
-
+    args.config=trial.number
     try:
         results = run_tune(params,**args.__dict__)
         # Return MSE for optimization and the full results for logging
