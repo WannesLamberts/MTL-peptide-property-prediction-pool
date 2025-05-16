@@ -92,8 +92,17 @@ def train(args):
 
     lit_model = create_model(args)
 
+    # Save the ModelCheckpoint as a variable so we can access it later
+    checkpoint_callback = ModelCheckpoint(
+        filename="{epoch}-{val_loss:.4f}",
+        monitor="val_loss",
+        mode="min",
+        save_top_k=1,
+    )
+
+
     trainer = pl.Trainer(
-        max_epochs=-1,
+        max_epochs=args.epochs,
         min_epochs=15,
         accelerator="gpu",
         devices=args.gpus,
@@ -112,12 +121,7 @@ def train(args):
                 verbose=True,
                 mode="min",
             ),
-            ModelCheckpoint(
-                filename="{epoch}-{val_loss:.4f}",
-                monitor="val_loss",
-                mode="min",
-                save_top_k=1,
-            ),
+            checkpoint_callback,
         ],
     )
     trainer.fit(
@@ -125,7 +129,7 @@ def train(args):
         train_dataloaders=train_dl,
         val_dataloaders=val_dl,
     )
-
+    best_val_loss = checkpoint_callback.best_model_score.item()
     if args.df_test is not None:
         test_ds = MTLPepDataset(args.df_test, args)
         test_dl = DataLoader(
@@ -133,7 +137,9 @@ def train(args):
             batch_size=args.bs,
             collate_fn=custom_collate,
         )
+
         trainer.test(ckpt_path="best", dataloaders=test_dl)
+    return best_val_loss
 
 
 def parse_args():
@@ -393,12 +399,21 @@ def parse_args():
         type=int,
         help="The id from the hpt-config file to use",
     )
+    #####
     parser.add_argument(
         "--lookup",
         default=None,
         type=str,
         help="the lookup table for the pools",
     )
+    parser.add_argument(
+        "--epochs",
+        default=-1,
+        type=int,
+        help="the lookup table for the pools",
+    )
+
+
     args = parser.parse_args()
 
     args = post_process_args(args)

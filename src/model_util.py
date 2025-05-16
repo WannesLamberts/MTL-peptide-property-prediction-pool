@@ -34,6 +34,43 @@ class ValuePredictionHeadFix(ValuePredictionHead):
 ValuePredictionHead = ValuePredictionHeadFix
 
 
+def get_activation_function(activation_name):
+    """Helper function to get activation function from string name"""
+    activations = {
+        'relu': nn.ReLU(),
+        'elu': nn.ELU(),
+        'tanh': nn.Tanh(),
+        'sigmoid': nn.Sigmoid(),
+    }
+    return activations[activation_name]
+
+
+class testprediction(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        layers = []
+        activation = get_activation_function(config.MLP['activation'])
+        hidden_sizes = config.MLP['hidden_sizes']  # List, e.g., [512, 256, 128]
+
+        # Input layer
+        layers.append(weight_norm(nn.Linear(config.hidden_size * 2, hidden_sizes[0]), dim=None))
+        layers.append(activation)
+        layers.append(nn.Dropout(config.MLP['dropout'], inplace=False))
+
+        # Hidden layers
+        for i in range(len(hidden_sizes) - 1):
+            layers.append(weight_norm(nn.Linear(hidden_sizes[i], hidden_sizes[i + 1]), dim=None))
+            layers.append(activation)
+            layers.append(nn.Dropout(config.MLP['dropout'], inplace=False))
+
+        # Output layer
+        layers.append(weight_norm(nn.Linear(hidden_sizes[-1], 1), dim=None))
+        self.main = nn.Sequential(*layers)
+
+    def forward(self, x):
+        return (self.main(x),)
+
+
 
 class EarlyStoppingLate(EarlyStopping):
     def _should_skip_check(self, trainer: "pl.Trainer") -> bool:
@@ -57,6 +94,7 @@ def create_model(args):
         intermediate_size=args.hidden_size * 4,
         num_hidden_layers=args.num_layers,
     )
+    bert_config.MLP = args.MLP
 
     if args.mode == "supervised":
         model = LitMTL.load_from_checkpoint(

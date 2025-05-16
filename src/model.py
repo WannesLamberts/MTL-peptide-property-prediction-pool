@@ -5,7 +5,7 @@ from tape.models.modeling_bert import (
 from tape.models.modeling_utils import MLMHead
 from torch import nn
 import torch
-from src.model_util import ValuePredictionHead
+from src.model_util import ValuePredictionHead,testprediction
 
 
 class MTLTransformerEncoder(ProteinBertAbstractModel):
@@ -30,7 +30,9 @@ class MTLTransformerEncoder(ProteinBertAbstractModel):
         self.bert = ProteinBertModel(bert_config)
 
         if self.mode == "supervised":
-            self.task_head = ValuePredictionHead(bert_config)
+            self.task_head = testprediction(bert_config)
+            #self.task_head = ValuePredictionHead(bert_config)
+
             pass
         elif self.mode != "pool":
             raise RuntimeError(f"Unrecognized mode {mode}")

@@ -1,22 +1,102 @@
+import optuna
 import pandas as pd
 from argparse import Namespace
 
+from tensorflow.python.layers.core import dropout
+from optuna.samplers import TPESampler
+import logging
+
+from train import post_process_args, train
+
 from src.util import (
+    split_run_config,
     DEFAULT_CONFIG,
+    check_checkpoint_path,
 )
-from train import *
 import argparse
+
+
+
+def objective(trial,args):
+    """Objective function for Optuna optimization."""
+    # Define hyperparameters to be tuned
+    params = {
+        "lr": trial.suggest_categorical("lr",[0.1,0.6]),
+        'optim': trial.suggest_categorical("optim",['adam','adamw','SGD']),
+        'scheduler': trial.suggest_categorical("scheduler",['warmup_decay_cos','warmup_decay_cos','none']),
+        'MLP': {'dropout': trial.suggest_categorical("dropout",[0,0.1,0.2]),
+                'hidden_sizes': trial.suggest_categorical("hidden_sizes",[[512, 256, 128],[256,128,64],[512]]),
+                'activation': trial.suggest_categorical("activation",['relu','tanh','sigmoid'])
+                }
+    }
+
+    try:
+        results = run_tune(params,**args.__dict__)
+        # Return MSE for optimization and the full results for logging
+        return results
+    except Exception as e:
+        # Log the error and return a poor result
+        logging.error(f"Trial failed with parameters {params}: {str(e)}")
+        return float('inf') # Return a bad score and None for failed trials
+
+
+def run_tune(params,**kwargs):
+    config_dict = DEFAULT_CONFIG | kwargs | params
+    run_config = Namespace(**config_dict)
+    run_config = post_process_args(run_config)
+    return train(run_config)
+
+def run_optimization(args, n_trials=100, study_name="hyperparameter_optimization"):
+    """
+    Run the full Optuna optimization process.
+
+    Args:
+        n_trials: Number of trials to run
+        study_name: Name of the study
+
+    Returns:
+        The Optuna study object and best parameters
+    """
+    # Create a new study or load existing one
+    storage_name = f"sqlite:///{study_name}.db"
+    study = optuna.create_study(
+        study_name=study_name,
+        storage=storage_name,
+        load_if_exists=True,
+        direction="minimize",
+        sampler=optuna.samplers.TPESampler(seed=42)
+    )
+
+    # Run the optimization
+    study.optimize(
+        lambda trial: objective(trial,args),
+        n_trials=n_trials,
+        catch=(Exception,)
+    )
+
+    # Log the best parameters and score
+    logging.info(f"Best trial: {study.best_trial.number}")
+    logging.info(f"Best score: {study.best_trial.value}")
+    logging.info(f"Best parameters: {study.best_trial.params}")
+
+    return study, study.best_params
 
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Run hyperparameter tuning configuration or create new configurations"
     )
-    parser.add_argument("--config", type=str, required=True)
     parser.add_argument("-i", type=int, default=None)
+    parser.add_argument(
+        "-m",
+        "--mode",
+        type=str,
+        default="supervised",
+        choices=["supervised", "pretrain"],
+    )
     parser.add_argument(
         "-p",
         "--pretrained-model",
-        default="none",
+        default="own",
         type=str,
         choices=["none", "tape", "own"],
     )
@@ -26,6 +106,15 @@ def parse_args():
     parser.add_argument("--test-i", type=str)
     parser.add_argument("--vocab-file", type=str)
     parser.add_argument("--scalers-file", type=str)
+    parser.add_argument("--bs", default=1024, type=int)
+    parser.add_argument("-a", "--accumulate-batches", default=1, type=int)
+    parser.add_argument(
+        "--lookup",
+        default=None,
+        type=str,
+        help="the lookup table for the pools",
+    )
+
     parser.add_argument(
         "--checkpoint-id",
         type=int,
@@ -34,39 +123,21 @@ def parse_args():
         "giving the full checkpoint path with '--checkpoint-path'",
     )
     parser.add_argument(
-        "--lookup",
-        default=None,
-        type=str,
+        "--epochs",
+        default=10,
+        type=int,
         help="the lookup table for the pools",
     )
-    args = parser.parse_args()
 
-    # if args.hpt_mode == "train" and args.i is None:
-    #     raise ValueError("Argument -i is required when --hpt-mode is train")
+    args = parser.parse_args()
 
     args.hpt_config = None
 
     return args
 
 
-def train_from_config(**kwargs):
-    config = kwargs["config"]
-    i = kwargs["i"]
-
-    config_dict = (
-        pd.read_csv(f"hpt/{config}.csv", index_col=False).iloc[i].to_dict()
-    )
-    config_dict = DEFAULT_CONFIG | kwargs | config_dict | {"config": config}
-    run_config = Namespace(**config_dict)
-    run_config = post_process_args(run_config)
-    run_config.name += f",TRIALID={i}"
-    train(run_config)
-
 if __name__ == "__main__":
-    pd.set_option("display.max_columns", None)  # Show all columns
-    pd.set_option("display.expand_frame_repr", False)  # Don't wrap columns
-    pd.set_option("display.max_colwidth", 100)
     args = parse_args()
-
-    train_from_config(**args.__dict__)
+    # Run the optimization
+    study, best_params = run_optimization(args,n_trials=50)
 

@@ -38,6 +38,7 @@ DEFAULT_CONFIG = {
     "warmup_epochs": 10,
     "cos_freq_epochs": 5,
     "decay_epochs": 50,
+    "epochs":-1,
 }
 
 
