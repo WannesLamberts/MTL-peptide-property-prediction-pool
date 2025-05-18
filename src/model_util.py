@@ -45,7 +45,7 @@ def get_activation_function(activation_name):
     return activations[activation_name]
 
 
-class testprediction(nn.Module):
+class poolprediction(nn.Module):
     def __init__(self, config):
         super().__init__()
         layers = []
@@ -70,6 +70,30 @@ class testprediction(nn.Module):
     def forward(self, x):
         return (self.main(x),)
 
+class baseprediction(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        layers = []
+        activation = get_activation_function(config.activation_mlp)
+        hidden_sizes = config.hidden_size_mlp  # List, e.g., [512, 256, 128]
+
+        # Input layer
+        layers.append(weight_norm(nn.Linear(config.hidden_size, hidden_sizes[0]), dim=None))
+        layers.append(activation)
+        layers.append(nn.Dropout(config.dropout_mlp, inplace=False))
+
+        # Hidden layers
+        for i in range(len(hidden_sizes) - 1):
+            layers.append(weight_norm(nn.Linear(hidden_sizes[i], hidden_sizes[i + 1]), dim=None))
+            layers.append(activation)
+            layers.append(nn.Dropout(config.dropout_mlp, inplace=False))
+
+        # Output layer
+        layers.append(weight_norm(nn.Linear(hidden_sizes[-1], 1), dim=None))
+        self.main = nn.Sequential(*layers)
+
+    def forward(self, x):
+        return (self.main(x),)
 
 
 class EarlyStoppingLate(EarlyStopping):

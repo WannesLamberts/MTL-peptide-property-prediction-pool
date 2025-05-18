@@ -23,11 +23,11 @@ def objective(trial,args):
         "lr": trial.suggest_categorical("lr",[0.1,0.6]),
         'optim': trial.suggest_categorical("optim",['adam','adamw','SGD']),
         'scheduler': trial.suggest_categorical("scheduler",['warmup_decay_cos','warmup_decay_cos','none']),
-        'MLP': {'dropout': trial.suggest_categorical("dropout",[0,0.1,0.2]),
-                'hidden_sizes': trial.suggest_categorical("hidden_sizes",[[512, 256, 128],[256,128,64],[512]]),
-                'activation': trial.suggest_categorical("activation",['relu','tanh','sigmoid'])
-                }
+        'dropout_mlp': trial.suggest_categorical("dropout",[0,0.1,0.2]),
+        'hidden_size_mlp': trial.suggest_categorical("hidden_sizes",['512-256-128','256-128-64','512']),
+        'activation_mlp': trial.suggest_categorical("activation",['relu','tanh','sigmoid'])
     }
+    params['hidden_size_mlp'] = [int(size) for size in params["hidden_size_mlp"].split("-")]
     args.config=trial.number
     try:
         results = run_tune(params,**args.__dict__)
@@ -127,7 +127,12 @@ def parse_args():
         type=int,
         help="the lookup table for the pools",
     )
-
+    parser.add_argument(
+        "--type",
+        default="pool",
+        type=str,
+        help="the lookup table for the pools",
+    )
     args = parser.parse_args()
 
     args.hpt_config = None
@@ -138,5 +143,5 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
     # Run the optimization
-    study, best_params = run_optimization(args,n_trials=50)
+    study, best_params = run_optimization(args,n_trials=1,study_name=f"{args.type}_HPC")
 

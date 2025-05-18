@@ -19,7 +19,7 @@ class LitMTL(pl.LightningModule):
         self.mtl_config = mtl_config
 
         self.model = MTLTransformerEncoder(
-            bert_config, mtl_config.mode
+            bert_config, mtl_config.mode,mtl_config.type
         )
 
         self.val_predictions, self.test_predictions = (None for _ in range(2))
@@ -106,7 +106,10 @@ class LitMTL(pl.LightningModule):
         return loss
 
     def supervised_step(self, batch, batch_idx, save_arg):
-        (t_out,) = self.model(batch["token_ids"], features=batch["features"])
+        if self.mtl_config.type=="base":
+            (t_out,) = self.model(batch["token_ids"])
+        elif self.mtl_config.type=="pool":
+            (t_out,) = self.model(batch["token_ids"], features=batch["features"])
 
         if len(t_out) > 0:
             # t_out will be optimized to be equal to the standardized label, inverse transform to get original label
@@ -255,9 +258,14 @@ class LitMTL(pl.LightningModule):
                 if predict_file_name == "val"
                 else self.mtl_config.df_test
             )
-            predictions_df = self._add_predictions_to_data(
-                data_df.drop(columns=['features']), predictions_df
-            )
+            if self.mtl_config.type=="pool":
+                predictions_df = self._add_predictions_to_data(
+                    data_df.drop(columns=['features']), predictions_df
+                )
+            elif self.mtl_config.type=="base":
+                predictions_df = self._add_predictions_to_data(
+                    data_df, predictions_df
+                )
             predictions_df.to_csv(
                 os.path.join(
                     result_dir, f"{predict_file_name}_loss={loss:.4f}.csv"

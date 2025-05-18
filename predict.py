@@ -85,6 +85,7 @@ def predict_run(run, all_data_file, predict_i,lookup_file):
     config_dict = DEFAULT_CONFIG | data_config
     args = Namespace(**config_dict)
     args.predict_file_name = "predict"
+    args.type = run_config["TYPE"]
     predict(run, args, run_config)
 
 

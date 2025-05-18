@@ -59,9 +59,12 @@ def train(args):
     print(f"Logging to {logger.log_dir}")
 
     print("Reading train and validation data")
-    lookup_df = pd.read_parquet(args.lookup, engine='pyarrow')
+    if args.type=="pool":
+        lookup_df = pd.read_parquet(args.lookup, engine='pyarrow')
+        args.df_train, args.df_val, args.df_test = read_train_val_test_data(args,lookup_df)
+    elif args.type=="base":
+        args.df_train, args.df_val, args.df_test = read_train_val_test_data(args)
 
-    args.df_train, args.df_val, args.df_test = read_train_val_test_data(args,lookup_df)
     # args.df_train = pd.read_parquet(args.train_i)
     # args.df_val= pd.read_parquet(args.val_i)
 
@@ -99,7 +102,6 @@ def train(args):
         mode="min",
         save_top_k=1,
     )
-
 
     trainer = pl.Trainer(
         max_epochs=args.epochs,
@@ -412,6 +414,13 @@ def parse_args():
         type=int,
         help="the lookup table for the pools",
     )
+    parser.add_argument(
+        "--type",
+        default="pool",
+        type=str,
+        help="the lookup table for the pools",
+    )
+
 
 
     args = parser.parse_args()
@@ -468,7 +477,7 @@ def post_process_args(args):
         f"PRETRAIN={args.pretrained_model},LR={args.lr},BS={args.bs * args.accumulate_batches},"
         f"OPTIM={args.optim},LOSS={args.loss},CLIP={args.clip_gradients},ACTIVATION={args.activation},"
         f"SCHED={args.scheduler},SIZE={args.hidden_size},NUMLAYERS={args.num_layers},HIDDENSIZEMLP={hidden_size_mlp},"
-        f"DROPOUTMLP={args.dropout_mlp},ACTIVATIONMLP={args.activation_mlp}"
+        f"DROPOUTMLP={args.dropout_mlp},ACTIVATIONMLP={args.activation_mlp},TYPE={args.type}"
     )
     return args
 

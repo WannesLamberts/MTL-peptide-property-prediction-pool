@@ -5,7 +5,7 @@ from tape.models.modeling_bert import (
 from tape.models.modeling_utils import MLMHead
 from torch import nn
 import torch
-from src.model_util import ValuePredictionHead,testprediction
+from src.model_util import ValuePredictionHead,poolprediction,baseprediction
 
 
 class MTLTransformerEncoder(ProteinBertAbstractModel):
@@ -15,7 +15,7 @@ class MTLTransformerEncoder(ProteinBertAbstractModel):
     Can be pretrained using a Masked Language Model head or can learn properties using multiple task heads
     """
 
-    def __init__(self, bert_config, mode):
+    def __init__(self, bert_config, mode,type):
         """
 
         :param bert_config:         A ProteinBertConfig containing the model parameters
@@ -27,13 +27,14 @@ class MTLTransformerEncoder(ProteinBertAbstractModel):
         super().__init__(bert_config)
 
         self.mode = mode
+        self.type=type
         self.bert = ProteinBertModel(bert_config)
 
         if self.mode == "supervised":
-            self.task_head = testprediction(bert_config)
-            #self.task_head = ValuePredictionHead(bert_config)
-
-            pass
+            if self.type=="pool":
+                self.task_head = poolprediction(bert_config)
+            elif self.type=="base":
+                self.task_head = baseprediction(bert_config)
         elif self.mode != "pool":
             raise RuntimeError(f"Unrecognized mode {mode}")
         self.init_weights()
@@ -41,8 +42,11 @@ class MTLTransformerEncoder(ProteinBertAbstractModel):
         outputs = self.bert(input_ids)
         sequence_output, pooled_output = outputs[:2]
         if self.mode == "supervised":
-            result = torch.cat((pooled_output, features), dim=1).to(torch.float16)
-            (out,) = self.task_head(result)
+            if self.type=="pool":
+                result = torch.cat((pooled_output, features), dim=1).to(torch.float16)
+                (out,) = self.task_head(result)
+            if self.type=="base":
+                (out,) = self.task_head(pooled_output)
         elif self.mode == "pool":
             out = pooled_output
         # (loss), prediction_scores, (hidden_states), (attentions)
