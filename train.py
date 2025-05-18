@@ -458,15 +458,17 @@ def post_process_args(args):
         )
         if "seed" in config_dict:
             del config_dict["seed"]
-
+        if "hidden_size_mlp" in config_dict:
+            config_dict["hidden_size_mlp"] = [int(size) for size in config_dict["hidden_size_mlp"].split("-")]
         args = argparse.Namespace(**(vars(args) | config_dict))
         print(f"Updated with hpt config: {config_dict}")
-
+    hidden_size_mlp ="-".join(str(size) for size in args.hidden_size_mlp)
     args.name = (
         f"CONFIG={args.config},MODE={args.mode},"
         f"PRETRAIN={args.pretrained_model},LR={args.lr},BS={args.bs * args.accumulate_batches},"
         f"OPTIM={args.optim},LOSS={args.loss},CLIP={args.clip_gradients},ACTIVATION={args.activation},"
-        f"SCHED={args.scheduler},SIZE={args.hidden_size},NUMLAYERS={args.num_layers}"
+        f"SCHED={args.scheduler},SIZE={args.hidden_size},NUMLAYERS={args.num_layers},HIDDENSIZEMLP={hidden_size_mlp},"
+        f"DROPOUTMLP={args.dropout_mlp},ACTIVATIONMLP={args.activation_mlp}"
     )
     return args
 

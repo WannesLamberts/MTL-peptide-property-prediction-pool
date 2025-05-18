@@ -49,19 +49,19 @@ class testprediction(nn.Module):
     def __init__(self, config):
         super().__init__()
         layers = []
-        activation = get_activation_function(config.MLP['activation'])
-        hidden_sizes = config.MLP['hidden_sizes']  # List, e.g., [512, 256, 128]
+        activation = get_activation_function(config.activation_mlp)
+        hidden_sizes = config.hidden_size_mlp  # List, e.g., [512, 256, 128]
 
         # Input layer
         layers.append(weight_norm(nn.Linear(config.hidden_size * 2, hidden_sizes[0]), dim=None))
         layers.append(activation)
-        layers.append(nn.Dropout(config.MLP['dropout'], inplace=False))
+        layers.append(nn.Dropout(config.dropout_mlp, inplace=False))
 
         # Hidden layers
         for i in range(len(hidden_sizes) - 1):
             layers.append(weight_norm(nn.Linear(hidden_sizes[i], hidden_sizes[i + 1]), dim=None))
             layers.append(activation)
-            layers.append(nn.Dropout(config.MLP['dropout'], inplace=False))
+            layers.append(nn.Dropout(config.dropout_mlp, inplace=False))
 
         # Output layer
         layers.append(weight_norm(nn.Linear(hidden_sizes[-1], 1), dim=None))
@@ -94,7 +94,9 @@ def create_model(args):
         intermediate_size=args.hidden_size * 4,
         num_hidden_layers=args.num_layers,
     )
-    bert_config.MLP = args.MLP
+    bert_config.dropout_mlp = args.dropout_mlp
+    bert_config.hidden_size_mlp = args.hidden_size_mlp
+    bert_config.activation_mlp = args.activation_mlp
 
     if args.mode == "supervised":
         model = LitMTL.load_from_checkpoint(

@@ -1,0 +1,5 @@
+lr,optim,scheduler,seed,dropout_mlp,hidden_size_mlp,activation_mlp
+0.00032628211902969827,adamw,warmup_decay_cos,209652396,0.1,512-256-128,relu
+0.1,adamw,warmup_decay_cos,209652396,1,128,relu
+
+

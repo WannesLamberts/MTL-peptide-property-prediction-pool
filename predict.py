@@ -23,15 +23,12 @@ from src.util import (
 def predict(run, args, run_config):
     args.vocab = pickle.load(open(args.vocab_file, "rb"))
     args.scalers = pickle.load(open(args.scalers_file, "rb"))
-
-    all_data_df = pd.read_csv(args.all_data_file, index_col=0)
+    all_data_df = pd.read_parquet(args.all_data_file)
     #args.df_test = all_data_df
     args.df_test = apply_index_file(all_data_df, args.predict_i)
 
     lookup_df = pd.read_parquet(args.lookup_file, engine='pyarrow')
-    original_index = args.df_test.index
     args.df_test = args.df_test.merge(lookup_df, on='filename', how='left')
-    args.df_test.index = original_index  # Restore original index
     predict_ds = MTLPepDataset(args.df_test, args)
     predict_dl = DataLoader(
         predict_ds,
@@ -48,6 +45,11 @@ def predict(run, args, run_config):
         intermediate_size=int(run_config["SIZE"]) * 4,
         num_hidden_layers=int(run_config["NUMLAYERS"]),
     )
+    hidden_size_mlp =[int(size) for size in run_config["HIDDENSIZEMLP"].split("-")]
+
+    bert_config.dropout_mlp = float(run_config["DROPOUTMLP"])
+    bert_config.hidden_size_mlp = hidden_size_mlp
+    bert_config.activation_mlp = run_config["ACTIVATIONMLP"]
 
     lit_model = LitMTL.load_from_checkpoint(
         check_checkpoint_path(os.path.join(run, "checkpoints")),
