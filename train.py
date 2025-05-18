@@ -468,7 +468,7 @@ def post_process_args(args):
         if "seed" in config_dict:
             del config_dict["seed"]
         if "hidden_size_mlp" in config_dict:
-            config_dict["hidden_size_mlp"] = [int(size) for size in config_dict["hidden_size_mlp"].split("-")]
+            config_dict["hidden_size_mlp"] = [int(size) for size in str(config_dict["hidden_size_mlp"]).split("-")]
         args = argparse.Namespace(**(vars(args) | config_dict))
         print(f"Updated with hpt config: {config_dict}")
     hidden_size_mlp ="-".join(str(size) for size in args.hidden_size_mlp)

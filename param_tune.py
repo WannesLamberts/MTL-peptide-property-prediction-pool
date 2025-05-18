@@ -27,7 +27,7 @@ def objective(trial,args):
         'hidden_size_mlp': trial.suggest_categorical("hidden_sizes",['512-256-128','256-128-64','512']),
         'activation_mlp': trial.suggest_categorical("activation",['relu','tanh','sigmoid'])
     }
-    params['hidden_size_mlp'] = [int(size) for size in params["hidden_size_mlp"].split("-")]
+    params['hidden_size_mlp'] = [int(size) for size in str(params["hidden_size_mlp"]).split("-")]
     args.config=f"{args.type}_hpc_{trial.number}"
     try:
         results = run_tune(params,**args.__dict__)
