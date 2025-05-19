@@ -20,11 +20,11 @@ def objective(trial,args):
     """Objective function for Optuna optimization."""
     # Define hyperparameters to be tuned
     params = {
-        "lr": trial.suggest_categorical("lr",[0.1,0.6]),
+        "lr": trial.suggest_categorical("lr",[0.0001,0.00033,0.001]),
         'optim': trial.suggest_categorical("optim",['adam','adamw','SGD']),
-        'scheduler': trial.suggest_categorical("scheduler",['warmup_decay_cos','warmup_decay_cos','none']),
-        'dropout_mlp': trial.suggest_categorical("dropout",[0,0.1,0.2]),
-        'hidden_size_mlp': trial.suggest_categorical("hidden_sizes",['512-256-128','256-128-64','512']),
+        'scheduler': trial.suggest_categorical("scheduler",['warmup_decay_cos','warmup','none']),
+        'dropout_mlp': trial.suggest_categorical("dropout",[0,0.1,0.3]),
+        'hidden_size_mlp': trial.suggest_categorical("hidden_sizes",['512-256-128','256-128','128','128-64-32']),
         'activation_mlp': trial.suggest_categorical("activation",['relu','tanh','sigmoid'])
     }
     params['hidden_size_mlp'] = [int(size) for size in str(params["hidden_size_mlp"]).split("-")]

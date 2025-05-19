@@ -103,6 +103,7 @@ def train(args):
         save_top_k=1,
     )
 
+
     trainer = pl.Trainer(
         max_epochs=args.epochs,
         min_epochs=15,
@@ -420,7 +421,6 @@ def parse_args():
         type=str,
         help="the lookup table for the pools",
     )
-
 
 
     args = parser.parse_args()
