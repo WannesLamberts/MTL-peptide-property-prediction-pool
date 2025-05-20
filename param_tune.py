@@ -123,7 +123,7 @@ def parse_args():
     )
     parser.add_argument(
         "--epochs",
-        default=10,
+        default=-1,
         type=int,
         help="the lookup table for the pools",
     )
