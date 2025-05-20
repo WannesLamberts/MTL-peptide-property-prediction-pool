@@ -139,6 +139,12 @@ def parse_args():
         type=str,
         help="the lookup table for the pools",
     )
+    parser.add_argument(
+        "--amount",
+        default=10,
+        type=int,
+        help="the lookup table for the pools",
+    )
     args = parser.parse_args()
 
     args.hpt_config = None
@@ -149,5 +155,5 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
     # Run the optimization
-    study, best_params = run_optimization(args,n_trials=5,study_name=f"{args.type}_HPC")
+    study, best_params = run_optimization(args,n_trials=args.amount,study_name=f"{args.type}_HPC")
 
