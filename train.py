@@ -103,10 +103,9 @@ def train(args):
         save_top_k=1,
     )
 
-
     trainer = pl.Trainer(
         max_epochs=args.epochs,
-        min_epochs=15,
+        min_epochs=0,
         accelerator="gpu",
         devices=args.gpus,
         strategy=(
@@ -117,6 +116,8 @@ def train(args):
         gradient_clip_val=(0.5 if args.clip_gradients else None),
         precision="16-mixed",
         profiler="simple",
+        max_time={"minutes":args.time} if args.time else None,
+
         callbacks=[
             EarlyStoppingLate(
                 monitor="val_loss",
@@ -419,6 +420,12 @@ def parse_args():
         "--type",
         default="pool",
         type=str,
+        help="the lookup table for the pools",
+    )
+    parser.add_argument(
+        "--time",
+        default=None,
+        type=int,
         help="the lookup table for the pools",
     )
 

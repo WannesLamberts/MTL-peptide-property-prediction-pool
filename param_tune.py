@@ -128,6 +128,12 @@ def parse_args():
         help="the lookup table for the pools",
     )
     parser.add_argument(
+        "--time",
+        default=None,
+        type=int,
+        help="the lookup table for the pools",
+    )
+    parser.add_argument(
         "--type",
         default="pool",
         type=str,
@@ -143,5 +149,5 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
     # Run the optimization
-    study, best_params = run_optimization(args,n_trials=1,study_name=f"{args.type}_HPC")
+    study, best_params = run_optimization(args,n_trials=5,study_name=f"{args.type}_HPC")
 
