@@ -121,7 +121,7 @@ def train(args):
         callbacks=[
             EarlyStoppingLate(
                 monitor="val_loss",
-                patience=25,
+                patience=5,
                 verbose=True,
                 mode="min",
             ),
