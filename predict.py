@@ -58,7 +58,8 @@ def predict(run, args, run_config):
     )
 
     name, version = run.split("/")[-2:]
-    logger = TensorBoardLogger("./lightning_logs", name=name, version=version)
+    result = run.split("/CONFIG")[0]
+    logger = TensorBoardLogger(result, name=name, version=version)
 
     trainer = pl.Trainer(
         accelerator="gpu",

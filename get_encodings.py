@@ -52,7 +52,9 @@ def get_encoding(run, args, run_config):
     )
 
     name, version = run.split("/")[-2:]
-    logger = TensorBoardLogger("./lightning_logs", name=name, version=version)
+    result = run.split("/CONFIG")[0]
+
+    logger = TensorBoardLogger(result, name=name, version=version)
 
     trainer = pl.Trainer(
         accelerator="gpu",
@@ -75,8 +77,9 @@ def get_encoding_run(run,all_data):
     run_config = split_run_config(run)
     config_dict = DEFAULT_CONFIG | data_config
     args = Namespace(**config_dict)
-    args.predict_file_name = "predict"
+    args.predict_file_name = "predict_encodings"
     args.mode = "pool"
+    args.type = "base"
     return get_encoding(run, args, run_config)
 
 
