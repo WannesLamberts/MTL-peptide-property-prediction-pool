@@ -105,7 +105,7 @@ def train(args):
 
     trainer = pl.Trainer(
         max_epochs=args.epochs,
-        min_epochs=0,
+        min_epochs=20,
         accelerator="gpu",
         devices=args.gpus,
         strategy=(
@@ -121,7 +121,7 @@ def train(args):
         callbacks=[
             EarlyStoppingLate(
                 monitor="val_loss",
-                patience=5,
+                patience=10,
                 verbose=True,
                 mode="min",
             ),
