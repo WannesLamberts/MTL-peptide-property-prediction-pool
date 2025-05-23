@@ -58,6 +58,8 @@ def plot_bar_vertical(data_series,title,xlabel,ylabel,figsize=(10, 6),sort=True)
     plt.grid(axis='y', linestyle='--', alpha=0.7)
     plt.tight_layout()
 
+
+
 def vertical_boxplot(data_series, ylabel, title, figsize=(6, 8)):
     """
     Generate a vertical boxplot for a given pandas Series.
@@ -163,64 +165,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
-def create_MAD_comparison_violinplot(data_series, labels,
-                                     title='Comparison of MAD values across different groupings',
-                                     xlabel='MAD', ylabel='Grouping Method',
-                                     bw=0.2, percentile_cutoff=0.95):
-    # Build the combined DataFrame
-    df_list = []
-    for data, label in zip(data_series, labels):
-        df_list.append(pd.DataFrame({
-            'MAD': data.values if hasattr(data, 'values') else data,
-            'Group': label
-        }))
 
-    df_violin = pd.concat(df_list, ignore_index=True)
-
-    # Calculate cutoff (e.g., 95th percentile)
-    cutoff = df_violin['MAD'].quantile(percentile_cutoff)
-
-    # Create figure and axis
-    fig, ax = plt.subplots(figsize=(10, 6))
-
-    # Create horizontal violin plot with a vibrant color
-    sns.violinplot(x='MAD', y='Group', data=df_violin, cut=0, ax=ax,
-                   inner='box', linewidth=1, bw=bw, color='#4C78A8')  # Deep blue color
-
-    # Set x-axis limits (for MAD values)
-    ax.set_xlim(-0.1, cutoff)
-
-    # Annotate the cutoff line (vertical now)
-    ax.axvline(x=cutoff, color='red', linestyle='--', alpha=0.7, linewidth=0.8)
-    ax.text(cutoff * 0.95, 0.02, f"Cutoff at {cutoff:.2f} ({int(percentile_cutoff * 100)}th percentile)",
-            ha='right', va='bottom', transform=ax.get_xaxis_transform(),
-            bbox=dict(facecolor='white', alpha=0.7, boxstyle='round,pad=0.5'))
-
-    # Annotate max values beyond cutoff
-    unique_groups = df_violin['Group'].unique()
-    for i, group in enumerate(unique_groups):
-        group_max = df_violin[df_violin['Group'] == group]['MAD'].max()
-        if group_max > cutoff:
-            ax.annotate(f"Max: {group_max:.2f}",
-                        xy=(cutoff, i), xytext=(cutoff * 0.85, i),
-                        ha='right', va='center',
-                        arrowprops=dict(arrowstyle='->', color='black', lw=0.8))
-
-    # Add centered median annotations slightly below the line
-    for i, group in enumerate(unique_groups):
-        group_median = df_violin[df_violin['Group'] == group]['MAD'].median()
-        ax.annotate(f"Median: {group_median:.2f}",
-                    xy=(group_median, i), xytext=(group_median, i - 0.15),  # Shift down by 0.15
-                    ha='center', va='top',
-                    bbox=dict(facecolor='white', alpha=0.7, boxstyle='round,pad=0.3'))
-
-    # Set plot titles and labels
-    ax.set_title(title)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-
-    plt.tight_layout()
-    plt.show()
 
 
 def plot_wasserstein_comparison(wasserstein_dict1, wasserstein_dict2,
@@ -286,3 +231,157 @@ def plot_wasserstein_comparison(wasserstein_dict1, wasserstein_dict2,
     plt.show()
 
     return plt
+
+
+######
+
+def plot_dataset_distributions(series,x_label,y_label):
+    # Sort data by values for better visualization (optional)
+    sorted_data = sorted(zip(series.index, series.values), key=lambda x: x[1], reverse=False)
+    categories_sorted, values_sorted = zip(*sorted_data)
+
+    # Create figure with optimal dimensions
+    fig, ax = plt.subplots(figsize=(10, 14))
+
+    # Create horizontal bar plot
+    bars = ax.barh(categories_sorted, values_sorted,
+                   color='steelblue', alpha=0.8, edgecolor='white', linewidth=0.5)
+
+    # Customize the plot
+    ax.set_xlabel(x_label, fontsize=12, fontweight='bold')
+    ax.set_ylabel(y_label, fontsize=12, fontweight='bold')
+
+    # Add value labels on bars
+    for i, (bar, value) in enumerate(zip(bars, values_sorted)):
+        ax.text(value + 1, bar.get_y() + bar.get_height() / 2,
+                f'{value}', va='center', ha='left', fontsize=8, color='black')
+
+    # Styling improvements
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_linewidth(0.5)
+    ax.spines['bottom'].set_linewidth(0.5)
+
+    # Add subtle grid
+    ax.grid(axis='x', alpha=0.3, linestyle='--', linewidth=0.5)
+    ax.set_axisbelow(True)
+
+    # Adjust y-axis labels
+    ax.tick_params(axis='y', labelsize=9)
+    ax.tick_params(axis='x', labelsize=10)
+
+    # Set margins and layout
+    ax.margins(y=0.01)  # Reduce vertical margins
+    plt.tight_layout()
+
+
+def horizontal_boxplot(data_series, xlabel, figsize=(8, 6),show_fliers=False):
+    """
+    Generate a horizontal boxplot for a given pandas Series.
+
+    Parameters:
+    - data_series: pandas Series with values (e.g., counts)
+    - xlabel: str, label for x-axis
+    - title: str, title of the plot
+    - figsize: tuple, figure size (width, height)
+    """
+    # Create figure
+    plt.figure(figsize=figsize)
+
+    # Create horizontal boxplot
+    sns.boxplot(
+        x=data_series.values,  # Changed from y to x
+        color="lightblue",
+        linewidth=1.5,
+        showfliers=show_fliers
+    )
+
+    # Customize labels and title
+    plt.xlabel(xlabel, fontsize=12, labelpad=10)  # Changed ylabel to xlabel
+
+    # Add grid
+    plt.grid(axis="x", linestyle="--", alpha=0.7)  # Changed grid axis to x
+
+    # Tight layout
+    plt.tight_layout()
+
+    # Display the plot
+    plt.show()
+
+
+def plot_kde_grouped(df, threshold,sequence_col="modified_sequence",run_col="filename",label_name="label", legend=None):
+    grouped = df.groupby(sequence_col)
+    for sequence, seq_group in grouped:
+        plt.figure(figsize=(8, 6))
+        # Group again within each sequence by filename to get iRT values
+        for filename, values in seq_group.groupby(run_col)[label_name]:
+            values = list(values)  # Convert Series to list
+            if len(values) >= threshold:
+                label = f"{filename} (n={len(values)})"
+                sns.kdeplot(values, label=label, fill=False)
+
+        plt.xlabel("Retention Time")
+        plt.ylabel("Density")
+        if legend:
+            plt.legend(title="", bbox_to_anchor=(1.05, 1), loc='upper left')
+        plt.title(f"KDE Plot for Sequence: {sequence}")
+        plt.show()
+
+def create_MAD_comparison_violinplot(data_series, labels,
+                                     title='Comparison of MAD values across different groupings',
+                                     xlabel='MAD', ylabel='Grouping Method',
+                                     bw=0.2, percentile_cutoff=0.95):
+    # Build the combined DataFrame
+    df_list = []
+    for data, label in zip(data_series, labels):
+        df_list.append(pd.DataFrame({
+            'MAD': data.values if hasattr(data, 'values') else data,
+            'Group': label
+        }))
+
+    df_violin = pd.concat(df_list, ignore_index=True)
+
+    # Calculate cutoff (e.g., 95th percentile)
+    cutoff = df_violin['MAD'].quantile(percentile_cutoff)
+
+    # Create figure and axis
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    # Create horizontal violin plot with a vibrant color
+    sns.violinplot(x='MAD', y='Group', data=df_violin, cut=0, ax=ax,
+                   inner='box', linewidth=1, bw=bw, color='#4C78A8')  # Deep blue color
+
+    # Set x-axis limits (for MAD values)
+    ax.set_xlim(-0.1, cutoff)
+
+    # Annotate the cutoff line (vertical now)
+    ax.axvline(x=cutoff, color='red', linestyle='--', alpha=0.7, linewidth=0.8)
+    ax.text(cutoff * 0.95, 0.02, f"Cutoff at {cutoff:.2f} ({int(percentile_cutoff * 100)}th percentile)",
+            ha='right', va='bottom', transform=ax.get_xaxis_transform(),
+            bbox=dict(facecolor='white', alpha=0.7, boxstyle='round,pad=0.5'))
+
+    # Annotate max values beyond cutoff
+    unique_groups = df_violin['Group'].unique()
+    for i, group in enumerate(unique_groups):
+        group_max = df_violin[df_violin['Group'] == group]['MAD'].max()
+        if group_max > cutoff:
+            ax.annotate(f"Max: {group_max:.2f}",
+                        xy=(cutoff, i), xytext=(cutoff * 0.85, i),
+                        ha='right', va='center',
+                        arrowprops=dict(arrowstyle='->', color='black', lw=0.8))
+
+    # Add centered median annotations slightly below the line
+    for i, group in enumerate(unique_groups):
+        group_median = df_violin[df_violin['Group'] == group]['MAD'].median()
+        ax.annotate(f"Median: {group_median:.2f}",
+                    xy=(group_median, i), xytext=(group_median, i - 0.15),  # Shift down by 0.15
+                    ha='center', va='top',
+                    bbox=dict(facecolor='white', alpha=0.7, boxstyle='round,pad=0.3'))
+
+    # Set plot titles and labels
+    ax.set_title(title)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+
+    plt.tight_layout()
+    plt.show()
