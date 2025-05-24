@@ -245,7 +245,7 @@ def plot_dataset_distributions(series,x_label,y_label):
 
     # Create horizontal bar plot
     bars = ax.barh(categories_sorted, values_sorted,
-                   color='steelblue', alpha=0.8, edgecolor='white', linewidth=0.5)
+                   color='#95C5F9', alpha=0.8, edgecolor='white', linewidth=0.5)
 
     # Customize the plot
     ax.set_xlabel(x_label, fontsize=12, fontweight='bold')
@@ -275,32 +275,73 @@ def plot_dataset_distributions(series,x_label,y_label):
     plt.tight_layout()
 
 
-def horizontal_boxplot(data_series, xlabel, figsize=(8, 6),show_fliers=False):
+
+def horizontal_boxplot(data_series, xlabel, figsize=(8, 6), show_fliers=False):
     """
-    Generate a horizontal boxplot for a given pandas Series.
+    Generate a horizontal boxplot for a given pandas Series with quantiles and outliers in legend.
 
     Parameters:
     - data_series: pandas Series with values (e.g., counts)
     - xlabel: str, label for x-axis
-    - title: str, title of the plot
     - figsize: tuple, figure size (width, height)
+    - show_fliers: bool, whether to show outliers on the plot
     """
+
+    # Calculate statistics
+    q1 = data_series.quantile(0.25)
+    q2 = data_series.quantile(0.50)  # median
+    q3 = data_series.quantile(0.75)
+    iqr = q3 - q1
+
+    # Calculate outlier boundaries (using standard 1.5 * IQR rule)
+    lower_fence = q1 - 1.5 * iqr
+    upper_fence = q3 + 1.5 * iqr
+    # Identify outliers
+    outliers = data_series[(data_series < lower_fence) | (data_series > upper_fence)]
+    n_outliers = len(outliers)
+
+    # Calculate whisker positions (actual min/max within fences)
+    lower_whisker = data_series[data_series >= lower_fence].min()
+    upper_whisker = data_series[data_series <= upper_fence].max()
+
     # Create figure
     plt.figure(figsize=figsize)
 
     # Create horizontal boxplot
     sns.boxplot(
-        x=data_series.values,  # Changed from y to x
-        color="lightblue",
+        x=data_series.values,
+        color="#95C5F9",
         linewidth=1.5,
         showfliers=show_fliers
     )
 
-    # Customize labels and title
-    plt.xlabel(xlabel, fontsize=12, labelpad=10)  # Changed ylabel to xlabel
+    # Customize labels
+    plt.ylabel(xlabel, fontsize=12, labelpad=10)
 
     # Add grid
-    plt.grid(axis="x", linestyle="--", alpha=0.7)  # Changed grid axis to x
+    plt.grid(axis="x", linestyle="--", alpha=0.7)
+
+    # Create legend text with statistics
+    legend_text = [
+        f"Q1 (25%): {q1:.2f}",
+        f"Q2 (50%, Median): {q2:.2f}",
+        f"Q3 (75%): {q3:.2f}",
+        f"IQR: {iqr:.2f}",
+        f"Lower Whisker: {lower_whisker:.2f}",
+        f"Upper Whisker: {upper_whisker:.2f}",
+        f"Outliers: {n_outliers}"
+    ]
+
+    # Add outlier range if outliers exist
+    if n_outliers > 0:
+        legend_text.append(f"Outlier Range: [{outliers.min():.2f}, {outliers.max():.2f}]")
+
+    # Add legend
+    plt.text(0.02, 0.98, '\n'.join(legend_text),
+             transform=plt.gca().transAxes,
+             fontsize=10,
+             verticalalignment='top',
+             bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
 
     # Tight layout
     plt.tight_layout()
@@ -327,9 +368,10 @@ def plot_kde_grouped(df, threshold,sequence_col="modified_sequence",run_col="fil
         plt.title(f"KDE Plot for Sequence: {sequence}")
         plt.show()
 
+
 def create_MAD_comparison_violinplot(data_series, labels,
-                                     title='Comparison of MAD values across different groupings',
-                                     xlabel='MAD', ylabel='Grouping Method',
+                                     title='',
+                                     xlabel='Grouping Method', ylabel='MAD',
                                      bw=0.2, percentile_cutoff=0.95):
     # Build the combined DataFrame
     df_list = []
@@ -338,50 +380,192 @@ def create_MAD_comparison_violinplot(data_series, labels,
             'MAD': data.values if hasattr(data, 'values') else data,
             'Group': label
         }))
-
     df_violin = pd.concat(df_list, ignore_index=True)
 
-    # Calculate cutoff (e.g., 95th percentile)
-    cutoff = df_violin['MAD'].quantile(percentile_cutoff)
+    # Calculate cutoff as 95th percentile of the group with highest values
+    group_max_percentiles = []
+    for group in df_violin['Group'].unique():
+        group_data = df_violin[df_violin['Group'] == group]['MAD']
+        group_95th = group_data.quantile(percentile_cutoff)
+        group_max_percentiles.append(group_95th)
+
+    cutoff = max(group_max_percentiles)
 
     # Create figure and axis
     fig, ax = plt.subplots(figsize=(10, 6))
 
-    # Create horizontal violin plot with a vibrant color
-    sns.violinplot(x='MAD', y='Group', data=df_violin, cut=0, ax=ax,
-                   inner='box', linewidth=1, bw=bw, color='#4C78A8')  # Deep blue color
+    # Create vertical violin plot with a clean, light color
+    sns.violinplot(x='Group', y='MAD', data=df_violin, cut=0, ax=ax,
+                   inner='box', linewidth=1, bw=bw, color='#95C5F9')  # Light sky blue
 
-    # Set x-axis limits (for MAD values)
-    ax.set_xlim(-0.1, cutoff)
+    # Set y-axis limits (for MAD values)
+    ax.set_ylim(-0.1, cutoff)
 
-    # Annotate the cutoff line (vertical now)
-    ax.axvline(x=cutoff, color='red', linestyle='--', alpha=0.7, linewidth=0.8)
-    ax.text(cutoff * 0.95, 0.02, f"Cutoff at {cutoff:.2f} ({int(percentile_cutoff * 100)}th percentile)",
-            ha='right', va='bottom', transform=ax.get_xaxis_transform(),
-            bbox=dict(facecolor='white', alpha=0.7, boxstyle='round,pad=0.5'))
+    # Annotate the cutoff line with a softer red
+    ax.axhline(y=cutoff, color='#FF6B6B', linestyle='--', alpha=0.8, linewidth=1.2)
 
-    # Annotate max values beyond cutoff
+    # Calculate medians and quantile ranges for x-axis labels
     unique_groups = df_violin['Group'].unique()
-    for i, group in enumerate(unique_groups):
-        group_max = df_violin[df_violin['Group'] == group]['MAD'].max()
-        if group_max > cutoff:
-            ax.annotate(f"Max: {group_max:.2f}",
-                        xy=(cutoff, i), xytext=(cutoff * 0.85, i),
-                        ha='right', va='center',
-                        arrowprops=dict(arrowstyle='->', color='black', lw=0.8))
+    x_labels_with_medians = []
+    for group in unique_groups:
+        group_data = df_violin[df_violin['Group'] == group]['MAD']
+        group_median = group_data.median()
+        x_labels_with_medians.append(f"{group}\n(median: {group_median:.3f})")
 
-    # Add centered median annotations slightly below the line
-    for i, group in enumerate(unique_groups):
-        group_median = df_violin[df_violin['Group'] == group]['MAD'].median()
-        ax.annotate(f"Median: {group_median:.2f}",
-                    xy=(group_median, i), xytext=(group_median, i - 0.15),  # Shift down by 0.15
-                    ha='center', va='top',
-                    bbox=dict(facecolor='white', alpha=0.7, boxstyle='round,pad=0.3'))
+    # Set custom x-axis labels with medians
+    ax.set_xticklabels(x_labels_with_medians)
 
     # Set plot titles and labels
-    ax.set_title(title)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
+    ax.set_title(title, fontsize=14, color='#2C3E50')
+    ax.set_xlabel(xlabel, fontsize=12, color='#34495E')
+    ax.set_ylabel(ylabel, fontsize=12, color='#34495E')
+
+    # Clean up the plot appearance
+    ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+    ax.set_facecolor('#FAFBFC')
+
+    plt.tight_layout()
+    plt.show()
+
+def plot_scatter(data,y_label='value'):
+    # Calculate quartiles and whiskers
+    Q1 = np.percentile(data, 25)
+    Q3 = np.percentile(data, 75)
+    IQR = Q3 - Q1
+
+    # Calculate whisker positions (1.5 * IQR rule)
+    lower_whisker = Q1 - 1.5 * IQR
+    upper_whisker = Q3 + 1.5 * IQR
+    # Create figure and axis
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    # Create x-coordinates for scatterplot (you can modify this based on your needs)
+    x_coords = np.arange(len(data))
+
+    # Identify outliers and normal points
+    below_lower_whisker = data < lower_whisker
+    above_upper_whisker = data > upper_whisker
+    normal_points = ~(below_lower_whisker | above_upper_whisker)
+
+    # Don't plot normal points - only show outliers
+
+    # Plot outliers below lower whisker in blue
+    if np.any(below_lower_whisker):
+        ax.scatter(x_coords[below_lower_whisker], data[below_lower_whisker],
+                   c='#95C5F9', s=50, label=f'Below lower whisker (<{lower_whisker:.2f}) n={len(below_lower_whisker)}',
+                   marker='o', edgecolors='darkblue', linewidth=1)
+
+    # Plot outliers above upper whisker in red
+    if np.any(above_upper_whisker):
+        ax.scatter(x_coords[above_upper_whisker], data[above_upper_whisker],
+                   c='#95C5F9', s=50, label=f'Above upper whisker (>{upper_whisker:.2f}) n={len(above_upper_whisker)}',
+                   marker='o', edgecolors='darkblue', linewidth=1)
+
+    # Customize the plot
+    ax.set_xlabel('Index')
+    ax.set_ylabel(y_label)
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+
+    # Show the plot
+    plt.tight_layout()
+    plt.show()
+
+##########
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+
+
+def combined_plot(data, xlabel="Count", figsize=(15, 10), range=(0, 40)):
+    """
+    Create a combined plot with histogram, boxplot, and scatter plot for outliers.
+    The third plot is positioned below the first two for larger plot sizes.
+
+    Parameters:
+    - data: pandas Series with values
+    - xlabel: str, label for x-axis
+    - figsize: tuple, figure size (width, height)
+    """
+
+    # Calculate statistics
+    q1 = data.quantile(0.25)
+    q2 = data.quantile(0.50)  # median
+    q3 = data.quantile(0.75)
+    iqr = q3 - q1
+
+    # Calculate outlier boundaries (using standard 1.5 * IQR rule)
+    lower_fence = q1 - 1.5 * iqr
+    upper_fence = q3 + 1.5 * iqr
+
+    # Identify outliers
+    outliers = data[(data < lower_fence) | (data > upper_fence)]
+    n_outliers = len(outliers)
+
+    # Calculate whisker positions
+    lower_whisker = data[data >= lower_fence].min()
+    upper_whisker = data[data <= upper_fence].max()
+
+    # Create figure with subplots in a 2x2 grid
+    fig = plt.figure(figsize=figsize)
+
+    # Create subplot layout: 2 plots on top row, 1 plot on bottom row spanning both columns
+    ax1 = plt.subplot(2, 2, 1)  # Top left
+    ax2 = plt.subplot(2, 2, 2)  # Top right
+    ax3 = plt.subplot(2, 1, 2)  # Bottom row, spanning both columns
+
+    # 1. Histogram
+    ax1.hist(data.values, range=range, color="#95C5F9", edgecolor='black')
+    ax1.set_xlabel(xlabel)
+    ax1.set_ylabel("Frequency")
+    ax1.grid(True, alpha=0.3)
+
+    # 2. Vertical Boxplot
+    sns.boxplot(y=data.values, color="#95C5F9", linewidth=1.5, showfliers=False, ax=ax2)
+    ax2.set_ylabel(xlabel)
+    ax2.grid(axis="y", linestyle="--", alpha=0.7)
+
+    # Add statistics text to boxplot
+    legend_text = [
+        f"Q1: {q1:.2f}",
+        f"Median: {q2:.2f}",
+        f"Q3: {q3:.2f}",
+        f"IQR: {iqr:.2f}",
+        f"Outliers: {n_outliers}"
+    ]
+
+    ax2.text(0.02, 0.98, '\n'.join(legend_text),
+             transform=ax2.transAxes,
+             fontsize=9,
+             verticalalignment='top',
+             bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+
+    # 3. Scatter plot for outliers (now spans the full width at the bottom)
+    x_coords = np.arange(len(data))
+
+    # Identify outlier positions
+    below_lower_whisker = data < lower_fence
+    above_upper_whisker = data > upper_fence
+
+    # Count outliers
+    below_count = np.sum(below_lower_whisker)
+    above_count = np.sum(above_upper_whisker)
+
+    # Plot outliers
+    if np.any(below_lower_whisker):
+        ax3.scatter(x_coords[below_lower_whisker], data[below_lower_whisker],
+                    c='red', s=50, label=f'Below lower fence (<{lower_whisker})(n={below_count})',
+                    marker='o', edgecolors='darkred', linewidth=1)
+
+    if np.any(above_upper_whisker):
+        ax3.scatter(x_coords[above_upper_whisker], data[above_upper_whisker],
+                    c='#95C5F9', s=50, label=f'Above upper fence(>{upper_whisker}) (n={above_count})',
+                    marker='o', edgecolors='darkblue', linewidth=1)
+    ax3.set_xlabel('Index')
+    ax3.set_ylabel(xlabel)
+    ax3.legend(fontsize=8)
+    ax3.grid(True, alpha=0.3)
 
     plt.tight_layout()
     plt.show()
