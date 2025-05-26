@@ -372,7 +372,7 @@ def plot_kde_grouped(df, threshold,sequence_col="modified_sequence",run_col="fil
 def create_MAD_comparison_violinplot(data_series, labels,
                                      title='',
                                      xlabel='Grouping Method', ylabel='MAD',
-                                     bw=0.2, percentile_cutoff=0.95):
+                                     bw=0.2, percentile_cutoff=0.95,lower=-0.1):
     # Build the combined DataFrame
     df_list = []
     for data, label in zip(data_series, labels):
@@ -399,7 +399,7 @@ def create_MAD_comparison_violinplot(data_series, labels,
                    inner='box', linewidth=1, bw=bw, color='#95C5F9')  # Light sky blue
 
     # Set y-axis limits (for MAD values)
-    ax.set_ylim(-0.1, cutoff)
+    ax.set_ylim(lower, cutoff)
 
     # Annotate the cutoff line with a softer red
     ax.axhline(y=cutoff, color='#FF6B6B', linestyle='--', alpha=0.8, linewidth=1.2)
