@@ -119,7 +119,7 @@ def train(args):
         gradient_clip_val=(0.5 if args.clip_gradients else None),
         precision="16-mixed",
         profiler="simple",
-        max_time={"hours":args.time,"minutes":30} if args.time else None,
+        max_time={"hours":args.time} if args.time else None,
 
         callbacks=[
             EarlyStoppingLate(
