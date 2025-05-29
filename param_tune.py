@@ -63,7 +63,7 @@ def run_optimization(args, n_trials=100, study_name="hyperparameter_optimization
         storage=storage_name,
         load_if_exists=True,
         direction="minimize",
-        sampler=optuna.samplers.TPESampler(seed=42)
+        sampler=optuna.samplers.TPESampler(seed=42, n_startup_trials=6)
     )
 
     # Run the optimization
