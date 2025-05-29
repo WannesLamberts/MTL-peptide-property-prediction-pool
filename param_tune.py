@@ -63,7 +63,7 @@ def run_optimization(args, n_trials=100, study_name="hyperparameter_optimization
         storage=storage_name,
         load_if_exists=True,
         direction="minimize",
-        sampler=optuna.samplers.TPESampler(seed=42, n_startup_trials=6)
+        sampler=optuna.samplers.TPESampler(seed=args.optuna, n_startup_trials=10)
     )
 
     # Run the optimization
@@ -147,6 +147,8 @@ def parse_args():
     )
 
     parser.add_argument('--seed', type=int, default=42, help='Random seed for reproducibility')
+
+    parser.add_argument('--optuna', type=int, default=42, help='Random seed for reproducibility')
 
     args = parser.parse_args()
 
