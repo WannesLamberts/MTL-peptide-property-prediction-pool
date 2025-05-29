@@ -69,7 +69,7 @@ def run_optimization(args, n_trials=100, study_name="hyperparameter_optimization
             prior_weight=1.0,  # Weight given to prior trials
             consider_magic_clip=True,
             consider_endpoints=False,
-            n_startup_trials=2
+            n_startup_trials=10
         )
     )
 
