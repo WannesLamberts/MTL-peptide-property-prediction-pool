@@ -23,10 +23,21 @@ def objective(trial,args):
         "lr": trial.suggest_categorical("lr",[0.0001,0.00033,0.001]),
         'optim': trial.suggest_categorical("optim",['adam','adamw','SGD']),
         'scheduler': trial.suggest_categorical("scheduler",['warmup_decay_cos','warmup','none']),
-        'dropout_mlp': trial.suggest_categorical("dropout",[0,0.1,0.3]),
-        'hidden_size_mlp': trial.suggest_categorical("hidden_sizes",['512-256-128','256-128','128','128-64-32']),
-        'activation_mlp': trial.suggest_categorical("activation",['relu','tanh','sigmoid'])
+        'dropout_mlp': trial.suggest_categorical("dropout_mlp",[0,0.1,0.3]),
+        'hidden_size_mlp': trial.suggest_categorical("hidden_size_mlp",['512-256-128','256-128','128','128-64-32']),
+        'activation_mlp': trial.suggest_categorical("activation_mlp",['relu','tanh','sigmoid'])
     }
+
+    # Check for duplicates using original params
+    all_trials = trial.study.get_trials(deepcopy=False)
+    for past_trial in all_trials:
+        if (past_trial.state == optuna.trial.TrialState.COMPLETE and
+            past_trial.number != trial.number and
+            past_trial.params == params):  # Compare original params
+            print(f"Duplicate found! Trial {past_trial.number} already tested these params")
+            raise optuna.TrialPruned()  # This makes the trial disappear from plots
+
+
     params['hidden_size_mlp'] = [int(size) for size in str(params["hidden_size_mlp"]).split("-")]
     args.config=f"{args.type}_hpc_{trial.number}"
     try:
@@ -62,16 +73,18 @@ def run_optimization(args, n_trials=100, study_name="hyperparameter_optimization
         study_name=study_name,
         storage=storage_name,
         load_if_exists=True,
-        direction="minimize",
-        sampler=optuna.samplers.TPESampler(
-            seed=args.optuna,
-            consider_prior=True,  # Use prior trials for modeling
-            prior_weight=1.0,  # Weight given to prior trials
-            consider_magic_clip=True,
-            consider_endpoints=False,
-            n_startup_trials=10
-        )
+        direction="minimize"
     )
+
+    # Now create sampler with dynamic seed based on existing trials
+    dynamic_seed = args.optuna + len(study.trials)
+    sampler = optuna.samplers.TPESampler(
+        seed=dynamic_seed,
+        n_startup_trials=10
+    )
+
+    # Update the study's sampler
+    study.sampler = sampler
 
     # Run the optimization
     study.optimize(
