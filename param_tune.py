@@ -92,6 +92,11 @@ def run_optimization(args, n_trials=100, study_name="hyperparameter_optimization
     # Update the study's sampler
     study.sampler = sampler
 
+    # Check if next trial would be startup
+    n_complete_trials = len([t for t in study.trials if t.state == optuna.trial.TrialState.COMPLETE])
+    is_startup = n_complete_trials < sampler._n_startup_trials
+
+    print(f"Next trial will be startup: {is_startup}")
     # Run the optimization
     study.optimize(
         lambda trial: objective(trial,args),
