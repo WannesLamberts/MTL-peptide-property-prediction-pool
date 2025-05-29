@@ -30,13 +30,19 @@ def objective(trial,args):
 
     # Check for duplicates using original params
     all_trials = trial.study.get_trials(deepcopy=False)
-    for past_trial in all_trials:
-        if (past_trial.state == optuna.trial.TrialState.COMPLETE and
-            past_trial.number != trial.number and
-            past_trial.params == params):  # Compare original params
-            print(f"Duplicate found! Trial {past_trial.number} already tested these params")
-            raise optuna.TrialPruned()  # This makes the trial disappear from plots
+    duplicate_states = [
+        optuna.trial.TrialState.COMPLETE,
+        optuna.trial.TrialState.RUNNING,
+        optuna.trial.TrialState.WAITING  # In case of distributed setups
+    ]
 
+    for past_trial in all_trials:
+        if (past_trial.state in duplicate_states and
+                past_trial.number != trial.number and
+                past_trial.params == params):
+            print(
+                f"Duplicate found! Trial {past_trial.number} already tested/testing these params (state: {past_trial.state})")
+            raise optuna.TrialPruned()
 
     params['hidden_size_mlp'] = [int(size) for size in str(params["hidden_size_mlp"]).split("-")]
     args.config=f"{args.type}_hpc_{trial.number}"
