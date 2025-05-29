@@ -13,5 +13,5 @@ apptainer shell --bind ${VSC_SCRATCH}/model/MTL-peptide-property-prediction-pool
 cd /app
 
 # Run the Python script
-python param_tune.py --checkpoint-id 0 --data-file "data/dataset.parquet" --train-i "data/train.csv" --val-i "data/val.csv" --vocab-file "data/vocab.p" --lookup "data/lookup.parquet" --bs 2048 --time 4 --type pool --epochs 50
+python param_tune.py --checkpoint-id 0 --data-file "data/dataset.parquet" --train-i "data/train.csv" --val-i "data/val.csv" --vocab-file "data/vocab.p" --lookup "data/lookup.parquet" --bs 2048 --time 3 --type pool --epochs 50 --amount 6
 EOF

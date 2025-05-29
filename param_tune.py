@@ -145,6 +145,9 @@ def parse_args():
         type=int,
         help="the lookup table for the pools",
     )
+
+    parser.add_argument('--seed', type=int, default=42, help='Random seed for reproducibility')
+
     args = parser.parse_args()
 
     args.hpt_config = None
