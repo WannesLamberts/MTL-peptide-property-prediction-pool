@@ -57,7 +57,7 @@ def run_optimization(args, n_trials=100, study_name="hyperparameter_optimization
         The Optuna study object and best parameters
     """
     # Create a new study or load existing one
-    storage_name = f"sqlite:///{study_name}.db"
+    storage_name = f"sqlite:///{study_name}.db?timeout=30"
     study = optuna.create_study(
         study_name=study_name,
         storage=storage_name,
