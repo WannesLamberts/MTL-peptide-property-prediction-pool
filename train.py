@@ -2,6 +2,8 @@ import argparse
 import pickle
 import torch
 
+import random
+import numpy as np
 import pandas as pd
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
@@ -51,8 +53,9 @@ def get_scalers(args, df_train=None):
         scalers = pickle.load(open(args.scalers_file, "rb"))
     return scalers
 
-import numpy as np
 def train(args):
+    pl.seed_everything(args.seed, workers=True)
+
     torch.set_float32_matmul_precision("medium")
     print(f"Training with this configuration:\n{args}")
     logger = TensorBoardLogger("./lightning_logs", name=args.name)
@@ -428,7 +431,7 @@ def parse_args():
         type=int,
         help="the lookup table for the pools",
     )
-
+    parser.add_argument('--seed', type=int, default=42, help='Random seed for reproducibility')
 
     args = parser.parse_args()
 
