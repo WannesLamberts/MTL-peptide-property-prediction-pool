@@ -569,3 +569,91 @@ def combined_plot(data, xlabel="Count", figsize=(15, 10), range=(0, 40)):
 
     plt.tight_layout()
     plt.show()
+
+
+def combined_plot_no_box(data, xlabel="Count", figsize=(15, 6), range=(0, 40)):
+    """
+    Create a combined plot with histogram and scatter plot for outliers side by side.
+
+    Parameters:
+    - data: pandas Series with values
+    - xlabel: str, label for x-axis
+    - figsize: tuple, figure size (width, height)
+    """
+
+    # Calculate statistics
+    q1 = data.quantile(0.25)
+    q2 = data.quantile(0.50)  # median
+    q3 = data.quantile(0.75)
+    iqr = q3 - q1
+
+    # Calculate outlier boundaries (using standard 1.5 * IQR rule)
+    lower_fence = q1 - 1.5 * iqr
+    upper_fence = q3 + 1.5 * iqr
+
+    # Identify outliers
+    outliers = data[(data < lower_fence) | (data > upper_fence)]
+    n_outliers = len(outliers)
+
+    # Calculate whisker positions
+    lower_whisker = data[data >= lower_fence].min()
+    upper_whisker = data[data <= upper_fence].max()
+
+    # Create figure with subplots in a 1x2 grid (side by side)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=figsize)
+
+    # 1. Histogram (Barplot)
+    ax1.hist(data.values, range=range, color="#95C5F9", edgecolor='black')
+    ax1.set_xlabel(xlabel)
+    ax1.set_ylabel("Frequency")
+    ax1.set_title("Histogram")
+    ax1.grid(True, alpha=0.3)
+
+    # Add statistics text to histogram
+    legend_text = [
+        f"Q1: {q1:.2f}",
+        f"Median: {q2:.2f}",
+        f"Q3: {q3:.2f}",
+        f"IQR: {iqr:.2f}",
+        f"Outliers: {n_outliers}"
+    ]
+
+    ax1.text(0.02, 0.98, '\n'.join(legend_text),
+             transform=ax1.transAxes,
+             fontsize=9,
+             verticalalignment='top',
+             bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+
+    # 2. Scatter plot for outliers
+    x_coords = np.arange(len(data))
+
+    # Identify outlier positions
+    below_lower_whisker = data < lower_fence
+    above_upper_whisker = data > upper_fence
+
+    # Count outliers
+    below_count = np.sum(below_lower_whisker)
+    above_count = np.sum(above_upper_whisker)
+
+    # Plot all data points first (optional - for context)
+    ax2.scatter(x_coords, data, c='lightgray', s=20, alpha=0.5, label='Normal values')
+
+    # Plot outliers on top
+    if np.any(below_lower_whisker):
+        ax2.scatter(x_coords[below_lower_whisker], data[below_lower_whisker],
+                    c='red', s=50, label=f'Below lower fence (<{lower_whisker:.2f}) (n={below_count})',
+                    marker='o', edgecolors='darkred', linewidth=1)
+
+    if np.any(above_upper_whisker):
+        ax2.scatter(x_coords[above_upper_whisker], data[above_upper_whisker],
+                    c='#95C5F9', s=50, label=f'Above upper fence (>{upper_whisker:.2f}) (n={above_count})',
+                    marker='o', edgecolors='darkblue', linewidth=1)
+
+    ax2.set_xlabel('Index')
+    ax2.set_ylabel(xlabel)
+    ax2.set_title("Outlier Analysis")
+    ax2.legend(fontsize=8)
+    ax2.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.show()
