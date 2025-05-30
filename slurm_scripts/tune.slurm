@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --ntasks=1
 #SBATCH -A ap_adrem_wb_thesis2425
-#SBATCH --time=02:00:00
+#SBATCH --time=24:00:00
 #SBATCH --partition=ampere_gpu
 #SBATCH --gpus-per-node=1
 
@@ -13,5 +13,5 @@ apptainer shell --bind ${VSC_SCRATCH}/model/MTL-peptide-property-prediction-pool
 cd /app
 
 # Run the Python script
-python param_tune.py --checkpoint-id 0 --data-file "data/dataset.parquet" --train-i "data/train.csv" --val-i "data/val.csv" --vocab-file "data/vocab.p" --lookup "data/lookup.parquet" --bs 2048 --type pool --epochs 10 --amount 100 --optuna 42
+python param_tune.py --checkpoint-id 0 --data-file "data/dataset.parquet" --train-i "data/train.csv" --val-i "data/val.csv" --vocab-file "data/vocab.p" --lookup "data/lookup.parquet" --bs 2048 --type pool --epochs 10 --amount 6 --optuna 42
 EOF
