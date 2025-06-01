@@ -3,16 +3,33 @@ from ctypes import pydll
 
 from src.utils_data import *
 import pandas as pd
+stri="aabbccdee"
+prev=""
+c=1
+for x in stri:
+   if x!=prev and c==0:
+       print("non repeating char is "+prev)
+       break
+   elif x!=prev and c==1:
+       c=0
+       prev=x
+   else:
+       c=1
+       prev=x
+
+
+
+
 
 import pandas as pd
-
-df_1 = pd.read_parquet("raw_data/80_tasks.parquet")
-df_2 = pd.read_parquet("raw_data/76_tasks.parquet")
-# Concatenate the DataFrames
-df_combined = pd.concat([df_1, df_2], ignore_index=True)
-
-# Write to a new Parquet file
-df_combined.to_parquet("raw_data/combined_tasks.parquet", index=False)
+#
+# df_1 = pd.read_parquet("raw_data/80_tasks.parquet")
+# df_2 = pd.read_parquet("raw_data/76_tasks.parquet")
+# # Concatenate the DataFrames
+# df_combined = pd.concat([df_1, df_2], ignore_index=True)
+#
+# # Write to a new Parquet file
+# df_combined.to_parquet("raw_data/combined_tasks.parquet", index=False)
 
 # df2 = pd.read_parquet("data/low_variety/train_low_variety.parquet")
 

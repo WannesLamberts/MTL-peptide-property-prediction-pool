@@ -37,11 +37,15 @@ def objective(trial,args):
     ]
 
     for past_trial in all_trials:
-        if (past_trial.state in duplicate_states and
-                past_trial.number != trial.number and
-                past_trial.params == params):
+        # If the past trial is completed, return its value
+        if past_trial.state == optuna.trial.TrialState.COMPLETE:
+            print(f"Duplicate found! Returning value from completed trial {past_trial.number}: {past_trial.value}")
+            return past_trial.value
+        else:
+            # If past trial is still running or waiting, you can either:
+            # Option 1: Prune this trial (original behavior)
             print(
-                f"Duplicate found! Trial {past_trial.number} already tested/testing these params (state: {past_trial.state})")
+                f"Duplicate found! Trial {past_trial.number} is still {past_trial.state.name}. Pruning current trial.")
             raise optuna.TrialPruned()
 
     params['hidden_size_mlp'] = [int(size) for size in str(params["hidden_size_mlp"]).split("-")]
