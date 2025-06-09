@@ -372,7 +372,7 @@ def plot_kde_grouped(df, threshold,sequence_col="modified_sequence",run_col="fil
 def create_MAD_comparison_violinplot(data_series, labels,
                                      title='',
                                      xlabel='Grouping Method', ylabel='MAD',
-                                     bw=0.2, percentile_cutoff=0.95,lower=-0.1):
+                                     bw=0.2, percentile_cutoff=0.95,lower=-0.1,figsize=(10, 6)):
     # Build the combined DataFrame
     df_list = []
     for data, label in zip(data_series, labels):
@@ -392,7 +392,7 @@ def create_MAD_comparison_violinplot(data_series, labels,
     cutoff = max(group_max_percentiles)
 
     # Create figure and axis
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=figsize)
 
     # Create vertical violin plot with a clean, light color
     sns.violinplot(x='Group', y='MAD', data=df_violin, cut=0, ax=ax,
@@ -654,6 +654,84 @@ def combined_plot_no_box(data, xlabel="Count", figsize=(15, 6), range=(0, 40)):
     ax2.set_title("Outlier Analysis")
     ax2.legend(fontsize=8)
     ax2.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.show()
+
+
+def simple_violin_plot(data_series, labels, title="Violin Plot", width=0.8,
+                       cutoff_percentile_upper=None, cutoff_percentile_lower=None,
+                       zero_line=False, colors=['lightcoral', 'lightblue', 'lightgreen', 'lightsalmon',
+                                                'lightsteelblue', 'lightpink', 'lightgray', 'lightcyan']):
+    """
+    Super simple violin plot with percentile zoom for multiple series
+
+    Parameters:
+    -----------
+    data_series : list of array-like
+        List of data series to plot
+    labels : list of str
+        Labels for each series
+    title : str
+        Plot title
+    width : float
+        Width of violin plots
+    cutoff_percentile_upper : float or None
+        Upper percentile for y-axis zoom (default 95). If None, shows full range.
+    cutoff_percentile_lower : float or None
+        Lower percentile for y-axis zoom (default None, no lower zoom)
+    zero_line : bool
+        If True, draws a dotted horizontal line at y=0 (default False)
+    """
+
+    all_data = np.concatenate(data_series)
+
+    if cutoff_percentile_upper is None and cutoff_percentile_lower is None:
+        y_min = np.min(all_data)
+        y_max = np.max(all_data)
+        zoom_applied = False
+    else:
+        if cutoff_percentile_lower is not None:
+            y_min = np.percentile(all_data, cutoff_percentile_lower)
+            y_max = np.percentile(all_data, cutoff_percentile_upper) if cutoff_percentile_upper is not None else np.max(
+                all_data)
+        else:
+            y_min = np.min(all_data)
+            y_max = np.percentile(all_data, cutoff_percentile_upper) if cutoff_percentile_upper is not None else np.max(
+                all_data)
+        zoom_applied = True
+
+    data_range = y_max - y_min
+    buffer = data_range * 0.05
+    y_min = y_min - buffer
+    y_max = y_max + buffer
+
+    plt.figure(figsize=(6, 6))
+
+    all_positive = all(np.min(series) >= 0 for series in data_series)
+    cut_param = 0 if all_positive else 2
+
+    ax = sns.violinplot(data=data_series, width=width, cut=cut_param,
+                        palette=colors[:len(data_series)])
+
+    # Calculate medians and create enhanced labels
+    enhanced_labels = []
+    for i, (label, original_data) in enumerate(zip(labels, data_series)):
+        median_val = np.median(original_data)
+        enhanced_labels.append(f"{label}\n(med: {median_val:.2f})")
+
+    ax.set_xticklabels(enhanced_labels)
+
+    # Add background grid lines
+    ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
+    ax.set_axisbelow(True)  # Put grid behind the violins
+
+    # Add optional zero line
+    if zero_line:
+        ax.axhline(y=0, color='red', linestyle='--', alpha=0.7, linewidth=1.5)
+
+    # Set y-axis limits
+    ax.set_ylim(y_min, y_max)
 
     plt.tight_layout()
     plt.show()
