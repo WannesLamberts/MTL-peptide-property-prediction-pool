@@ -1,7 +1,7 @@
 import os
 import glob
 import pandas as pd
-from sklearn.metrics import median_absolute_error
+from sklearn.metrics import median_absolute_error,mean_absolute_error
 def get_loss_predictions_file(file):
     df = pd.read_csv(file, index_col=0)
     mae = median_absolute_error(df['label'], df['predictions'])
