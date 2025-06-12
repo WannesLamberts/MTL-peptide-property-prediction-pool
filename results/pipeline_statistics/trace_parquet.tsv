@@ -1,2 +1,0 @@
-task_id	hash	native_id	name	status	exit	submit	duration	realtime	%cpu	peak_rss	peak_vmem	rchar	wchar
-1	ca/a064b3	2030938	to_parquet:TO_PARQUET (1)	COMPLETED	0	2025-05-08 07:19:01.411	2m 28s	2m 18s	80.3%	11.0 GB	12.5 GB	12.6 GB	7.9 GB
