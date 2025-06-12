@@ -1,57 +1,53 @@
-# Multi-task learning Peptide Property Prediction
-
+  
+    
+    
+# Thesis - Context-Aware Retention Time Prediction for Enhanced Proteomics Analysis
+## Introduction
+In this thesis, we investigated whether it is feasible and meaningful to add sample context to models for predicting retention time. This is one of the codebases used in the project; however, another portion of this thesis was developed in a separate Git repository, which includes more comprehensive documentation and can be accessed at the following link ([WannesLamberts/Massivekb-Pipeline](https://github.com/WannesLamberts/Massivekb-Pipeline). 
 ## Setup environment
-All required packages can be installed in a conda environment by running
+All required packages can be installed in a conda environment by running:
+```bash  
+ conda env create -f environment.yml  
+ ``` 
+ It is also possible to build our apptainer image which was used for all experiments in the thesis.
+ ```bash  
+ apptainer build env.sif apptainer.def
+ ```
+ The pretrained model build by Ceder Dens, can be found at [Zenodo](https://doi.org/10.5281/zenodo.11084463).   
+ 
+## Training the model
+Trained the context-aware model first the context tokens have to be collect by running:
+ ```bash  
+ python get_encodings.py --run "lightning_logs/CONFIG=mtl_5foldcv_pretrain_0,TASKS=CCS_iRT,MODE=pretrain,PRETRAIN=none,LR=0.0001940554482365,BS=1024,OPTIM=adam,LOSS=mae,CLIP=False,ACTIVATION=gelu,SCHED=warmup,SIZE=180,NUMLAYERS=9/version_0" --data-file "data/dataset.parquet" --train-i "data/train.csv" --val-i "data/val.csv" --test-i "data/test.csv" --out_file "data/lookup.parquet"
+ ```
+When this tokens are collect the model can be trained by running:
+```bash  
+python train.py --config $NAME -p own --checkpoint-id 0 -c --data-file "data/dataset.parquet" --train-i "data/$TRAIN" --val-i "data/val.csv" --test-i "data/test.csv" --hpt-config "hpt/hpt_class.csv" --hpt-id $HPT_ID --vocab-file "data/vocab.p" --lookup "data/lookup.parquet" --bs 2048 --type pool
+ ```
+ `$name` stands for the name you want the output file to have.
+ `$HPT_ID` stands for the hyperparameter configuration id wanted(configurations can be found in `/hpt`.
+ `$TRAIN` stands for the csv file containing the data indices for training.
+## Parameter tuning
+The parameter tuning setup can be run by: 
+```bash
+python param_tune.py --checkpoint-id 0 --data-file "data/dataset.parquet" --train-i "data/train.csv" --val-i "data/val.csv" --vocab-file "data/vocab.p" --lookup "data/lookup.parquet" --bs 2048 --type pool --epochs 10 --amount 6 --optuna 42
+```
+## Predict
+Running prediction with the trained model can be done by
+```bash
+python predict.py --run $DIR --all_data_file "data/$DATASET/all_data.csv" --predict_i "data/$DATASET/test.csv" --lookup_file "data/$DATASET/lookup.parquet"
+```
+where `$DIR` stands for the directory the model checkpoint is located in
 
-    conda env create -f environment.yml
+## Code structure  
+All our analysis and results can be found in the `/notebooks` directory.
+In `/slurms_scripts` All executed scripts can be found that we used during this thesis for experiments.
+In `/src` All main components can be found.
+in `hpt/hpt_class` the main hyperparameter configurations can be found.
+`Get_encodings.py` has the implementation for building the context tokens.
+`param_tuning.py` has the implementation for the parameter tuning functionality.
+`predict.py` has the implementation for predicting using a trained model.
+`train.py` has the implementation for training a model.
 
-This will create an environment with the name MTL-pep-prop, activate by running
-
-    conda activate MTL-pep-prop
-
-If you want to use our data or our trained models, you should get them from [Zenodo](https://doi.org/10.5281/zenodo.11084463). 
-Put the `data` and `lightning_logs` folders in the root directory.
-
-In addition, recreating the plots requires the `dccs_results` and `prosit_results` folders.
-
-## Making predictions
-Making predictions for your data with one of our models can be done by running
-
-    python predict.py
-
-An example can be found in the file.
-Make sure your data and PTMs are in the same format as e.g. `data/mtl_5fold_cv/all_data.csv`.
-`prepare_data.py` can help you with this.
-
-
-## Training a model
-The models used in the study were trained by using the commands below. Get overview of all command line arguments by running
-
-    python train.py -h
-
-Note that there are 2 ways to give your data. You can use 1 datafile with all data and separate files to specify the 
-indices for the train/val/test splits, this saves a lot of space for five-fold cross-validation or creating learning curves.
-Alternatively, separate datafiles containing all columns can be given for the train/val/test splits.
-
-
-### Train from scratch
-    python train.py --config "mtl_5foldcv_supervised_none_0" -c --data-file data/mtl_5fold_cv/all_data.csv --train-i data/mtl_5fold_cv/train_0.csv --val-i data/mtl_5fold_cv/val_0.csv --test-i data/mtl_5fold_cv/test_0.csv --hpt-config hpt/mtl_hpt_supervised_none.csv --hpt-id 21 --vocab-file data/mtl_5fold_cv/all_data_vocab.p
-
-### Pretrain
-    python train.py --config "mtl_5foldcv_pretrain_0" -m pretrain -c --data-file data/mtl_5fold_cv/all_data.csv --train-i data/mtl_5fold_cv/train_0.csv --val-i data/mtl_5fold_cv/val_0.csv --hpt-config hpt/mtl_hpt_pretrain.csv --hpt-id 7 --hidden-size 180 --num-layers 9 --vocab-file data/mtl_5fold_cv/all_data_vocab.p
-
-### Fine-tune own
-    python train.py --config "mtl_5foldcv_finetune_own_0" -p own --checkpoint-id 0 -c --data-file data/mtl_5fold_cv/all_data.csv --train-i data/mtl_5fold_cv/train_0.csv --val-i data/mtl_5fold_cv/val_0.csv --test-i data/mtl_5fold_cv/test_0.csv --hpt-config hpt/mtl_hpt_finetune_own.csv --hpt-id 27 --vocab-file data/mtl_5fold_cv/all_data_vocab.p
-
-### Fine-tune TAPE
-    python train.py --config "mtl_5foldcv_supervised_none_0" -p tape -c --data-file data/mtl_5fold_cv/all_data.csv --train-i data/mtl_5fold_cv/train_0.csv --val-i data/mtl_5fold_cv/val_0.csv --test-i data/mtl_5fold_cv/test_0.csv --hpt-config hpt/mtl_hpt_finetune_tape.csv --hpt-id 25 --vocab-file data/mtl_5fold_cv/all_data_vocab.p
-
-
-## Making the plots and statistical tests
-The plots were made by running
-
-    python plot.py
-
-The statistical tests for difference between the performance results were performed by running
-
-    python calculate_metrics.py
+## Acknowledgements
+We build this codebase on the original code by Ceder Dens for the base model.
