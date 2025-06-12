@@ -12,12 +12,11 @@ def plot_bar_horizontal(data_series,title="Sequences by dataset for split",
 
     plt.figure(figsize=figsize)
     ax = sns.barplot(
-    x=data_series.values,  # Values of the Series (counts)
-    y=data_series.index,   # Index of the Series (datasets)
+    x=data_series.values,
+    y=data_series.index,
     alpha=0.8,
     color="#2ca02c"
     )
-        # Add value labels to the bars
     for container in ax.containers:
         ax.bar_label(container, fmt='%d', padding=3)
 
@@ -36,10 +35,10 @@ def plot_bar_vertical(data_series,title,xlabel,ylabel,figsize=(10, 6),sort=True)
     if sort:
         data_series = data_series.sort_values(ascending=False)
     plt.figure(figsize=figsize)
-    colors = sns.color_palette("colorblind", len(data_series))  # You can use other palettes too
+    colors = sns.color_palette("colorblind", len(data_series))
     ax = sns.barplot(
-    x=data_series.index,  # Values of the Series (counts)
-    y=data_series.values,   # Index of the Series (datasets)
+    x=data_series.index,
+    y=data_series.values,
     palette=colors,
     alpha=0.8,
     )
@@ -54,22 +53,13 @@ def plot_bar_vertical(data_series,title,xlabel,ylabel,figsize=(10, 6),sort=True)
     # Remove spines
     sns.despine()
 
-    # Add grid lines for better readability
     plt.grid(axis='y', linestyle='--', alpha=0.7)
     plt.tight_layout()
 
 
 
 def vertical_boxplot(data_series, ylabel, title, figsize=(6, 8)):
-    """
-    Generate a vertical boxplot for a given pandas Series.
 
-    Parameters:
-    - data_series: pandas Series with values (e.g., counts)
-    - ylabel: str, label for y-axis
-    - title: str, title of the plot
-    - figsize: tuple, figure size (width, height)
-    """
     # Create figure
     plt.figure(figsize=figsize)
 
@@ -88,7 +78,6 @@ def vertical_boxplot(data_series, ylabel, title, figsize=(6, 8)):
     # Add grid
     plt.grid(axis="y", linestyle="--", alpha=0.7)
 
-    # Tight layout
     plt.tight_layout()
 
     # Display the plot
@@ -96,15 +85,7 @@ def vertical_boxplot(data_series, ylabel, title, figsize=(6, 8)):
 
 
 def horizontal_boxplot(data_series, xlabel, title, figsize=(8, 6),show_fliers=False):
-    """
-    Generate a horizontal boxplot for a given pandas Series.
 
-    Parameters:
-    - data_series: pandas Series with values (e.g., counts)
-    - xlabel: str, label for x-axis
-    - title: str, title of the plot
-    - figsize: tuple, figure size (width, height)
-    """
     # Create figure
     plt.figure(figsize=figsize)
 
@@ -153,7 +134,6 @@ def create_MAD_comparison_boxplot(data_series, labels, title="Comparison Boxplot
     ax.set_ylabel(ylabel)
     ax.set_xlabel(xlabel)
 
-    # Optional: Create a summary Series similar to the original code
     summary = pd.Series([s for s in data_series], index=labels)
 
     plt.tight_layout()
@@ -171,18 +151,7 @@ import seaborn as sns
 def plot_wasserstein_comparison(wasserstein_dict1, wasserstein_dict2,
                                 label1="Dataset 1", label2="Dataset 2",
                                 xlim=(0, 20), figsize=(10, 6)):
-    """
-    Create KDE plot comparing two sets of Wasserstein distances.
 
-    Args:
-        wasserstein_dict1: First dictionary of Wasserstein distances
-        wasserstein_dict2: Second dictionary of Wasserstein distances
-        label1: Label for the first dataset
-        label2: Label for the second dataset
-        xlim: x-axis limits as tuple (min, max)
-        figsize: Figure size as tuple (width, height)
-    """
-    # Extract values
     x_values1 = np.array(list(wasserstein_dict1.values()))
     x_values2 = np.array(list(wasserstein_dict2.values()))
 
@@ -236,7 +205,6 @@ def plot_wasserstein_comparison(wasserstein_dict1, wasserstein_dict2,
 ######
 
 def plot_dataset_distributions(series,x_label,y_label):
-    # Sort data by values for better visualization (optional)
     sorted_data = sorted(zip(series.index, series.values), key=lambda x: x[1], reverse=False)
     categories_sorted, values_sorted = zip(*sorted_data)
 
@@ -262,7 +230,6 @@ def plot_dataset_distributions(series,x_label,y_label):
     ax.spines['left'].set_linewidth(0.5)
     ax.spines['bottom'].set_linewidth(0.5)
 
-    # Add subtle grid
     ax.grid(axis='x', alpha=0.3, linestyle='--', linewidth=0.5)
     ax.set_axisbelow(True)
 
@@ -277,15 +244,7 @@ def plot_dataset_distributions(series,x_label,y_label):
 
 
 def horizontal_boxplot(data_series, xlabel, figsize=(8, 6), show_fliers=False):
-    """
-    Generate a horizontal boxplot for a given pandas Series with quantiles and outliers in legend.
 
-    Parameters:
-    - data_series: pandas Series with values (e.g., counts)
-    - xlabel: str, label for x-axis
-    - figsize: tuple, figure size (width, height)
-    - show_fliers: bool, whether to show outliers on the plot
-    """
 
     # Calculate statistics
     q1 = data_series.quantile(0.25)
@@ -293,7 +252,6 @@ def horizontal_boxplot(data_series, xlabel, figsize=(8, 6), show_fliers=False):
     q3 = data_series.quantile(0.75)
     iqr = q3 - q1
 
-    # Calculate outlier boundaries (using standard 1.5 * IQR rule)
     lower_fence = q1 - 1.5 * iqr
     upper_fence = q3 + 1.5 * iqr
     # Identify outliers
@@ -373,7 +331,6 @@ def create_MAD_comparison_violinplot(data_series, labels,
                                      title='',
                                      xlabel='Grouping Method', ylabel='MAD',
                                      bw=0.2, percentile_cutoff=0.95,lower=-0.1,figsize=(10, 6)):
-    # Build the combined DataFrame
     df_list = []
     for data, label in zip(data_series, labels):
         df_list.append(pd.DataFrame({
@@ -382,7 +339,6 @@ def create_MAD_comparison_violinplot(data_series, labels,
         }))
     df_violin = pd.concat(df_list, ignore_index=True)
 
-    # Calculate cutoff as 95th percentile of the group with highest values
     group_max_percentiles = []
     for group in df_violin['Group'].unique():
         group_data = df_violin[df_violin['Group'] == group]['MAD']
@@ -447,9 +403,6 @@ def plot_scatter(data,y_label='value'):
     above_upper_whisker = data > upper_whisker
     normal_points = ~(below_lower_whisker | above_upper_whisker)
 
-    # Don't plot normal points - only show outliers
-
-    # Plot outliers below lower whisker in blue
     if np.any(below_lower_whisker):
         ax.scatter(x_coords[below_lower_whisker], data[below_lower_whisker],
                    c='#95C5F9', s=50, label=f'Below lower whisker (<{lower_whisker:.2f}) n={len(below_lower_whisker)}',
@@ -479,23 +432,12 @@ import numpy as np
 
 
 def combined_plot(data, xlabel="Count", figsize=(15, 10), range=(0, 40)):
-    """
-    Create a combined plot with histogram, boxplot, and scatter plot for outliers.
-    The third plot is positioned below the first two for larger plot sizes.
-
-    Parameters:
-    - data: pandas Series with values
-    - xlabel: str, label for x-axis
-    - figsize: tuple, figure size (width, height)
-    """
-
     # Calculate statistics
     q1 = data.quantile(0.25)
     q2 = data.quantile(0.50)  # median
     q3 = data.quantile(0.75)
     iqr = q3 - q1
 
-    # Calculate outlier boundaries (using standard 1.5 * IQR rule)
     lower_fence = q1 - 1.5 * iqr
     upper_fence = q3 + 1.5 * iqr
 
@@ -507,10 +449,8 @@ def combined_plot(data, xlabel="Count", figsize=(15, 10), range=(0, 40)):
     lower_whisker = data[data >= lower_fence].min()
     upper_whisker = data[data <= upper_fence].max()
 
-    # Create figure with subplots in a 2x2 grid
     fig = plt.figure(figsize=figsize)
 
-    # Create subplot layout: 2 plots on top row, 1 plot on bottom row spanning both columns
     ax1 = plt.subplot(2, 2, 1)  # Top left
     ax2 = plt.subplot(2, 2, 2)  # Top right
     ax3 = plt.subplot(2, 1, 2)  # Bottom row, spanning both columns
@@ -541,7 +481,6 @@ def combined_plot(data, xlabel="Count", figsize=(15, 10), range=(0, 40)):
              verticalalignment='top',
              bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
 
-    # 3. Scatter plot for outliers (now spans the full width at the bottom)
     x_coords = np.arange(len(data))
 
     # Identify outlier positions
@@ -572,14 +511,7 @@ def combined_plot(data, xlabel="Count", figsize=(15, 10), range=(0, 40)):
 
 
 def combined_plot_no_box(data, xlabel="Count", figsize=(15, 6), range=(0, 40)):
-    """
-    Create a combined plot with histogram and scatter plot for outliers side by side.
 
-    Parameters:
-    - data: pandas Series with values
-    - xlabel: str, label for x-axis
-    - figsize: tuple, figure size (width, height)
-    """
 
     # Calculate statistics
     q1 = data.quantile(0.25)
@@ -587,7 +519,6 @@ def combined_plot_no_box(data, xlabel="Count", figsize=(15, 6), range=(0, 40)):
     q3 = data.quantile(0.75)
     iqr = q3 - q1
 
-    # Calculate outlier boundaries (using standard 1.5 * IQR rule)
     lower_fence = q1 - 1.5 * iqr
     upper_fence = q3 + 1.5 * iqr
 
@@ -663,27 +594,6 @@ def simple_violin_plot(data_series, labels, title="Violin Plot", width=0.8,
                        cutoff_percentile_upper=None, cutoff_percentile_lower=None,
                        zero_line=False, colors=['lightcoral', 'lightblue', 'lightgreen', 'lightsalmon',
                                                 'lightsteelblue', 'lightpink', 'lightgray', 'lightcyan']):
-    """
-    Super simple violin plot with percentile zoom for multiple series
-
-    Parameters:
-    -----------
-    data_series : list of array-like
-        List of data series to plot
-    labels : list of str
-        Labels for each series
-    title : str
-        Plot title
-    width : float
-        Width of violin plots
-    cutoff_percentile_upper : float or None
-        Upper percentile for y-axis zoom (default 95). If None, shows full range.
-    cutoff_percentile_lower : float or None
-        Lower percentile for y-axis zoom (default None, no lower zoom)
-    zero_line : bool
-        If True, draws a dotted horizontal line at y=0 (default False)
-    """
-
     all_data = np.concatenate(data_series)
 
     if cutoff_percentile_upper is None and cutoff_percentile_lower is None:
@@ -714,7 +624,6 @@ def simple_violin_plot(data_series, labels, title="Violin Plot", width=0.8,
     ax = sns.violinplot(data=data_series, width=width, cut=cut_param,
                         palette=colors[:len(data_series)])
 
-    # Calculate medians and create enhanced labels
     enhanced_labels = []
     for i, (label, original_data) in enumerate(zip(labels, data_series)):
         median_val = np.median(original_data)
@@ -722,11 +631,9 @@ def simple_violin_plot(data_series, labels, title="Violin Plot", width=0.8,
 
     ax.set_xticklabels(enhanced_labels)
 
-    # Add background grid lines
     ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
     ax.set_axisbelow(True)  # Put grid behind the violins
 
-    # Add optional zero line
     if zero_line:
         ax.axhline(y=0, color='red', linestyle='--', alpha=0.7, linewidth=1.5)
 

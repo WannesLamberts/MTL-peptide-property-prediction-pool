@@ -4,13 +4,10 @@ from sklearn.metrics import median_absolute_error,median_absolute_error
 
 def create_dataset(file, out_file):
     df = pd.read_parquet(file, engine="pyarrow")
-    # Select relevant columns
     df = df[['sequence', 'iRT', 'filename','dataset']]
 
-    # Rename columns correctly
     df.columns = ['modified_sequence', 'label', 'filename', 'dataset']
 
-    # Add missing columns
     df['task'] = 'iRT'
     os.makedirs(os.path.dirname(out_file), exist_ok=True)
 
@@ -19,13 +16,10 @@ def create_dataset(file, out_file):
 
 def create_model_dataset(file, out_file):
     df = pd.read_parquet(file, engine="pyarrow")
-    # Select relevant columns
     df = df[['sequence', 'iRT', 'filename','dataset']]
 
-    # Rename columns correctly
     df.columns = ['modified_sequence', 'label', 'filename', 'dataset']
 
-    # Add missing columns
     df['task'] = 'iRT'
     os.makedirs(os.path.dirname(out_file), exist_ok=True)
 

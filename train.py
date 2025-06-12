@@ -41,7 +41,6 @@ def get_scalers(args, df_train=None):
         if len(df_train) > 0:
             t_scaler.fit(df_train["label"].values.reshape(-1, 1))
         else:
-            # If no training values for a task, create a scaler that does not alter the values
             t_scaler.fit([[-1.0], [1.0]])
         scalers = t_scaler
         if args.use_1_data_file:

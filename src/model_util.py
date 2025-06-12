@@ -50,7 +50,7 @@ class poolprediction(nn.Module):
         super().__init__()
         layers = []
         activation = get_activation_function(config.activation_mlp)
-        hidden_sizes = config.hidden_size_mlp  # List, e.g., [512, 256, 128]
+        hidden_sizes = config.hidden_size_mlp
 
         # Input layer
         layers.append(weight_norm(nn.Linear(config.hidden_size * 2, hidden_sizes[0]), dim=None))
@@ -75,7 +75,7 @@ class baseprediction(nn.Module):
         super().__init__()
         layers = []
         activation = get_activation_function(config.activation_mlp)
-        hidden_sizes = config.hidden_size_mlp  # List, e.g., [512, 256, 128]
+        hidden_sizes = config.hidden_size_mlp
 
         # Input layer
         layers.append(weight_norm(nn.Linear(config.hidden_size, hidden_sizes[0]), dim=None))

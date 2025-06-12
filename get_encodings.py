@@ -93,15 +93,13 @@ def get_mean_pools(df,run):
         run
     )
     pred = get_encoding_run(best_run, df)
-    # Collect all predictions in a list (preallocate memory if possible)
     batch_list = []
     index_list = []
 
     for batch_tensor, batch_indices in pred:
-        batch_list.append(batch_tensor.numpy())  # Convert batch tensor to NumPy array
+        batch_list.append(batch_tensor.numpy())
         index_list.append(batch_indices)
 
-    # Stack all batches at once
     predictions = np.vstack(batch_list)
     indices = np.concatenate(index_list)
 
@@ -118,10 +116,8 @@ def get_mean_pools(df,run):
 
 
 if __name__ == "__main__":
-    # Setup argparse to handle command-line arguments
     parser = argparse.ArgumentParser(description="Run prediction with a trained model")
 
-    # Add arguments to the parser
     parser.add_argument(
         "--run", type=str, required=True, help="Path to the model run (e.g., best_run directory)"
     )
@@ -141,7 +137,6 @@ if __name__ == "__main__":
         "--out_file", type=str, required=True, help="Path to the prediction index file"
     )
 
-    # Parse the arguments
     args = parser.parse_args()
     data_file = pd.read_parquet(args.data_file)
     train = apply_index_file(data_file,args.train_i)

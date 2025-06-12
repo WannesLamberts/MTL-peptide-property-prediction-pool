@@ -16,7 +16,7 @@ def compute_wasserstein_for_sequence(sequence, group, min_files, col='filename')
     distributions_dict = {k: v for k, v in distributions.to_dict().items() if len(v) >= min_files}
     filenames = list(distributions_dict.keys())
 
-    if len(filenames) < 2:  # Need at least 2 files to compute distance
+    if len(filenames) < 2:
         return sequence, None
 
     distances = [
@@ -31,15 +31,13 @@ def compute_wasserstein_for_sequence(sequence, group, min_files, col='filename')
 
 def compute_mean_wasserstein_distance(df, min_files, col='filename', n_jobs=19):
     grouped = df.groupby('sequence')
-    groups = list(grouped)  # Convert to list for tqdm compatibility
+    groups = list(grouped)
 
-    # Parallel execution with progress bar
     results = Parallel(n_jobs=n_jobs)(
         delayed(compute_wasserstein_for_sequence)(sequence, group, min_files, col)
         for sequence, group in tqdm(groups, desc="Processing sequences")
     )
 
-    # Filter out None results and create dictionary
     mean_distances = {seq: dist for seq, dist in results if dist is not None}
 
     return mean_distances

@@ -18,7 +18,6 @@ import argparse
 
 def objective(trial,args):
     """Objective function for Optuna optimization."""
-    # Define hyperparameters to be tuned
     params = {
         "lr": trial.suggest_categorical("lr",[0.0001,0.00033,0.001]),
         'optim': trial.suggest_categorical("optim",['adam','adamw','SGD']),
@@ -28,12 +27,11 @@ def objective(trial,args):
         'activation_mlp': trial.suggest_categorical("activation_mlp",['relu','tanh','sigmoid'])
     }
 
-    # Check for duplicates using original params
     all_trials = trial.study.get_trials(deepcopy=False)
     duplicate_states = [
         optuna.trial.TrialState.COMPLETE,
         optuna.trial.TrialState.RUNNING,
-        optuna.trial.TrialState.WAITING  # In case of distributed setups
+        optuna.trial.TrialState.WAITING
     ]
 
     for past_trial in all_trials:
@@ -41,13 +39,10 @@ def objective(trial,args):
                 past_trial.number != trial.number and
                 past_trial.params == params):
 
-            # If the past trial is completed, return its value
             if past_trial.state == optuna.trial.TrialState.COMPLETE:
                 print(f"Duplicate found! Returning value from completed trial {past_trial.number}: {past_trial.value}")
                 return past_trial.value
             else:
-                # If past trial is still running or waiting, you can either:
-                # Option 1: Prune this trial (original behavior)
                 print(
                     f"Duplicate found! Trial {past_trial.number} is still {past_trial.state.name}. Pruning current trial.")
                 raise optuna.TrialPruned()
@@ -56,12 +51,10 @@ def objective(trial,args):
     args.config=f"{args.type}_hpc_{trial.number}"
     try:
         results = run_tune(params,**args.__dict__)
-        # Return MSE for optimization and the full results for logging
         return results
     except Exception as e:
-        # Log the error and return a poor result
         logging.error(f"Trial failed with parameters {params}: {str(e)}")
-        return float('inf') # Return a bad score and None for failed trials
+        return float('inf')
 
 
 def run_tune(params,**kwargs):
@@ -71,17 +64,6 @@ def run_tune(params,**kwargs):
     return train(run_config)
 
 def run_optimization(args, n_trials=100, study_name="hyperparameter_optimization"):
-    """
-    Run the full Optuna optimization process.
-
-    Args:
-        n_trials: Number of trials to run
-        study_name: Name of the study
-
-    Returns:
-        The Optuna study object and best parameters
-    """
-    # Create a new study or load existing one
     storage_name = f"sqlite:///{study_name}.db?timeout=300"
     study = optuna.create_study(
         study_name=study_name,
@@ -90,7 +72,6 @@ def run_optimization(args, n_trials=100, study_name="hyperparameter_optimization
         direction="minimize"
     )
 
-    # Now create sampler with dynamic seed based on existing trials
     dynamic_seed = args.optuna + len(study.trials)
     sampler = optuna.samplers.TPESampler(
         seed=dynamic_seed,
@@ -98,22 +79,18 @@ def run_optimization(args, n_trials=100, study_name="hyperparameter_optimization
         multivariate=True
     )
 
-    # Update the study's sampler
     study.sampler = sampler
 
-    # Check if next trial would be startup
     n_complete_trials = len([t for t in study.trials if t.state == optuna.trial.TrialState.COMPLETE])
     is_startup = n_complete_trials < sampler._n_startup_trials
 
     print(f"Next trial will be startup: {is_startup}")
-    # Run the optimization
     study.optimize(
         lambda trial: objective(trial,args),
         n_trials=n_trials,
         catch=(Exception,)
     )
 
-    # Log the best parameters and score
     logging.info(f"Best trial: {study.best_trial.number}")
     logging.info(f"Best score: {study.best_trial.value}")
     logging.info(f"Best parameters: {study.best_trial.params}")
@@ -199,6 +176,5 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-    # Run the optimization
     study, best_params = run_optimization(args,n_trials=args.amount,study_name=f"{args.type}_HPC")
 
